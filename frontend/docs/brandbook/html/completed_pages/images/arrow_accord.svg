@@ -1,0 +1,16 @@
+<svg width="44.000000" height="44.000000" viewBox="0 0 44 44" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+    <desc>
+        Created with Pixso.
+    </desc>
+    <defs>
+        <clipPath id="clip312_10509">
+            <rect id="button" width="44.000000" height="44.000000"
+                  transform="translate(44.000000 44.000000) rotate(-179.999985)" fill="white" fill-opacity="0"/>
+        </clipPath>
+    </defs>
+    <g clip-path="url(#clip312_10509)">
+        <path id="Icon" d="M15 25L22 19L29 25" stroke="#EDEDED" stroke-opacity="1.000000" stroke-width="2.000000"
+              stroke-linejoin="round"/>
+    </g>
+</svg>

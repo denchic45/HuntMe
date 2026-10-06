@@ -1,0 +1,926 @@
+<html>
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <link
+    data-template-style="true"
+    href="../bitrix/cache/css/s1/fsp/template_c3cf341f59f389cdcee02a5826a1c4c7/template_c3cf341f59f389cdcee02a5826a1c4c7_v1.css%3F17592379127322.css" rel="stylesheet" type="text/css" />
+  <script>if (!window.BX) window.BX = {}
+  if (!window.BX.message) window.BX.message = function(mess) {
+    if (typeof mess === 'object') {
+      for (let i in mess) {
+        BX.message[i] = mess[i]
+      }
+      return true
+    }
+  }</script>
+  <script>(window.BX || top.BX).message({
+    'JS_CORE_LOADING': 'Загрузка...',
+    'JS_CORE_NO_DATA': '- Нет данных -',
+    'JS_CORE_WINDOW_CLOSE': 'Закрыть',
+    'JS_CORE_WINDOW_EXPAND': 'Развернуть',
+    'JS_CORE_WINDOW_NARROW': 'Свернуть в окно',
+    'JS_CORE_WINDOW_SAVE': 'Сохранить',
+    'JS_CORE_WINDOW_CANCEL': 'Отменить',
+    'JS_CORE_WINDOW_CONTINUE': 'Продолжить',
+    'JS_CORE_H': 'ч',
+    'JS_CORE_M': 'м',
+    'JS_CORE_S': 'с',
+    'JSADM_AI_HIDE_EXTRA': 'Скрыть лишние',
+    'JSADM_AI_ALL_NOTIF': 'Показать все',
+    'JSADM_AUTH_REQ': 'Требуется авторизация!',
+    'JS_CORE_WINDOW_AUTH': 'Войти',
+    'JS_CORE_IMAGE_FULL': 'Полный размер'
+  })</script>
+
+  <script src="../bitrix/js/main/core/core.min.js%3F1747908999225353"></script>
+
+  <script>BX.Runtime.registerExtension({ 'name': 'main.core', 'namespace': 'BX', 'loaded': true })</script>
+  <script>BX.setJSList(['\/bitrix\/js\/main\/core\/core_ajax.js', '\/bitrix\/js\/main\/core\/core_promise.js', '\/bitrix\/js\/main\/polyfill\/promise\/js\/promise.js', '\/bitrix\/js\/main\/loadext\/loadext.js', '\/bitrix\/js\/main\/loadext\/extension.js', '\/bitrix\/js\/main\/polyfill\/promise\/js\/promise.js', '\/bitrix\/js\/main\/polyfill\/find\/js\/find.js', '\/bitrix\/js\/main\/polyfill\/includes\/js\/includes.js', '\/bitrix\/js\/main\/polyfill\/matches\/js\/matches.js', '\/bitrix\/js\/ui\/polyfill\/closest\/js\/closest.js', '\/bitrix\/js\/main\/polyfill\/fill\/main.polyfill.fill.js', '\/bitrix\/js\/main\/polyfill\/find\/js\/find.js', '\/bitrix\/js\/main\/polyfill\/matches\/js\/matches.js', '\/bitrix\/js\/main\/polyfill\/core\/dist\/polyfill.bundle.js', '\/bitrix\/js\/main\/core\/core.js', '\/bitrix\/js\/main\/polyfill\/intersectionobserver\/js\/intersectionobserver.js', '\/bitrix\/js\/main\/lazyload\/dist\/lazyload.bundle.js', '\/bitrix\/js\/main\/polyfill\/core\/dist\/polyfill.bundle.js', '\/bitrix\/js\/main\/parambag\/dist\/parambag.bundle.js'])
+  </script>
+  <script>BX.Runtime.registerExtension({ 'name': 'pull.protobuf', 'namespace': 'BX', 'loaded': true })</script>
+  <script>BX.Runtime.registerExtension({ 'name': 'rest.client', 'namespace': 'window', 'loaded': true })</script>
+  <script>(window.BX || top.BX).message({
+    'pull_server_enabled': 'N',
+    'pull_config_timestamp': 0,
+    'shared_worker_allowed': 'Y',
+    'pull_guest_mode': 'N',
+    'pull_guest_user_id': 0,
+    'pull_worker_mtime': 1747907765
+  });
+  (window.BX || top.BX).message({ 'PULL_OLD_REVISION': 'Для продолжения корректной работы с сайтом необходимо перезагрузить страницу.' })</script>
+  <script>BX.Runtime.registerExtension({ 'name': 'pull.client', 'namespace': 'BX', 'loaded': true })</script>
+  <script>BX.Runtime.registerExtension({ 'name': 'pull', 'namespace': 'window', 'loaded': true })</script>
+  <script>(window.BX || top.BX).message({
+    'LANGUAGE_ID': 'ru',
+    'FORMAT_DATE': 'DD.MM.YYYY',
+    'FORMAT_DATETIME': 'DD.MM.YYYY HH:MI:SS',
+    'COOKIE_PREFIX': 'BITRIX_SM',
+    'SERVER_TZ_OFFSET': '10800',
+    'UTF_MODE': 'Y',
+    'SITE_ID': 's1',
+    'SITE_DIR': '\/',
+    'USER_ID': '',
+    'SERVER_TIME': 1791207606,
+    'USER_TZ_OFFSET': 0,
+    'USER_TZ_AUTO': 'Y',
+    'bitrix_sessid': 'a846dd799b4ba514bcf14ded57c8a6cb'
+  })</script>
+
+
+  <script src="../bitrix/js/pull/protobuf/protobuf.js%3F1738167487274055"></script>
+  <script src="../bitrix/js/pull/protobuf/model.js%3F173816748770928"></script>
+  <script src="../bitrix/js/rest/client/rest.client.min.js%3F17381675089240"></script>
+  <script src="../bitrix/js/pull/client/pull.client.min.js%3F174790776749849"></script>
+  <script>BX.setJSList(['\/bitrix\/components\/bitrix\/search.title\/script.js', '\/local\/templates\/fsp\/components\/bitrix\/menu\/horizontal_multilevel1\/script.js'])</script>
+  <script>BX.setCSSList(['\/local\/templates\/fsp\/components\/bitrix\/search.title\/head_search\/style.css', '\/local\/templates\/fsp\/components\/bitrix\/menu\/horizontal_multilevel1\/style.css', '\/local\/templates\/fsp\/components\/bitrix\/main.feedback\/comment_footer\/style.css', '\/local\/templates\/fsp\/template_styles.css'])</script>
+  <script>
+    (function() {
+      'use strict'
+
+      var counter = function() {
+        var cookie = (function(name) {
+          var parts = ('; ' + document.cookie).split('; ' + name + '=')
+          if (parts.length == 2) {
+            try {
+              return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()))
+            } catch (e) {
+            }
+          }
+        })('BITRIX_CONVERSION_CONTEXT_s1')
+
+        if (cookie && cookie.EXPIRE >= BX.message('SERVER_TIME'))
+          return
+
+        var request = new XMLHttpRequest()
+        request.open('POST', '/bitrix/tools/conversion/ajax_counter.php', true)
+        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+        request.send(
+          'SITE_ID=' + encodeURIComponent('s1') +
+          '&sessid=' + encodeURIComponent(BX.bitrix_sessid()) +
+          '&HTTP_REFERER=' + encodeURIComponent(document.referrer)
+        )
+      }
+
+      if (window.frameRequestStart === true)
+        BX.addCustomEvent('onFrameDataReceived', counter)
+      else
+        BX.ready(counter)
+    })()
+  </script>
+
+
+  <script
+    src="../bitrix/cache/js/s1/fsp/template_1fb2fbd6155d245cf5b36d6f8f440837/template_1fb2fbd6155d245cf5b36d6f8f440837_v1.js%3F17592379127898"></script>
+  <script>var _ba = _ba || []
+  _ba.push(['aid', '7b003e491264ee1f275afe790003a811'])
+  _ba.push(['host', 'fsp-russia.ru']);
+  (function() {
+    var ba = document.createElement('script')
+    ba.type = 'text/javascript'
+    ba.async = true
+    ba.src = (document.location.protocol == 'https:' ? 'https://' : 'http://') + 'bitrix.info/ba.js'
+    var s = document.getElementsByTagName('script')[0]
+    s.parentNode.insertBefore(ba, s)
+  })()</script>
+
+
+  <title>Брендбук</title>
+
+  <meta charset="UTF-8">
+  <meta content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+        name="viewport">
+  <meta content="ie=edge" http-equiv="X-UA-Compatible">
+
+  <link href="../completed_pages/css/custom.css%3F1876283367.css" rel="stylesheet">
+  <link href="../completed_pages/css/custom_device.css%3F1556738070.css" rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=Inter:wght@100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+    rel="stylesheet">
+
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" rel="stylesheet"
+        type="text/css" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"
+    rel="stylesheet"
+  />
+  <script crossorigin="anonymous"
+          integrity="sha512-+k1pnlgt4F1H8L7t3z95o3/KO+o78INEcXTbnoJQ/F2VqDVhWoaiVml/OEHv9HsVgxUaVW+IbiZPUJQfF/YxZw=="
+          referrerpolicy="no-referrer" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.js"></script>
+
+</head>
+
+<body bgcolor="#FFFFFF" leftmargin="0" marginheight="0" marginwidth="0" topmargin="0">
+
+
+<header class="desktop">
+  <div class="container">
+    <div class="row">
+      <div class="logo">
+        <a href="https://fsp-russia.ru/"><img alt="logo" src="../completed_pages/images/logo_head.svg"></a>
+      </div>
+      <div class="buttons_block">
+        <div class="social">
+          <div class="network vk">
+            <a href="https://vk.com/russiafsp" target="_blank">
+              <svg fill="none" height="12.000000" viewBox="0 0 20 12" width="20.000000"
+                   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <desc>
+                  Created with Pixso.
+                </desc>
+                <defs />
+                <path id="Vector"
+                      d="M10.59 11.84C4.09 11.84 0.15 7.33 0 -0.16L3.29 -0.16C3.39 5.34 5.89 7.67 7.81 8.15L7.81 -0.16L10.97 -0.16L10.97 4.59C12.82 4.38 14.75 2.22 15.41 -0.16L18.51 -0.16C18.01 2.77 15.9 4.93 14.41 5.82C15.91 6.54 18.31 8.43 19.23 11.84L15.82 11.84C15.1 9.56 13.33 7.79 10.97 7.55L10.97 11.84L10.59 11.84Z"
+                      fill="#EDEDED" fill-opacity="1.000000" fill-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+          <div class="network telegram">
+            <a href="https://t.me/fsprussia" target="_blank">
+              <svg fill="none" height="14.000000" viewBox="0 0 17 14" width="17.000000"
+                   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <desc>
+                  Created with Pixso.
+                </desc>
+                <defs />
+                <path id="path5"
+                      d="M1 5.94C1 5.94 8.22 2.86 10.73 1.78C11.69 1.35 14.94 -0.04 14.94 -0.04C14.94 -0.04 16.45 -0.64 16.32 0.83C16.28 1.43 15.95 3.55 15.61 5.85C15.11 9.1 14.57 12.64 14.57 12.64C14.57 12.64 14.48 13.64 13.77 13.81C13.06 13.99 11.89 13.21 11.69 13.03C11.52 12.9 8.55 10.96 7.47 10C7.18 9.74 6.84 9.23 7.51 8.62C9.01 7.19 10.81 5.42 11.89 4.29C12.4 3.77 12.9 2.56 10.81 4.03C7.84 6.15 4.92 8.14 4.92 8.14C4.92 8.14 4.25 8.58 3 8.19C1.75 7.8 0.29 7.28 0.29 7.28C0.29 7.28 -0.72 6.63 1 5.94Z"
+                      fill="#EDEDED" fill-opacity="1.000000" fill-rule="nonzero" />
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div class="search ">
+          <div id="title-search">
+            <form action="https://fsp-russia.ru/search/index.php">
+              <input id="title-search-input" autocomplete="off" class="input" maxlength="50" name="q" size="40" type="text"
+                     value="" />&nbsp;<input class="hidden" name="s" type="submit" value="Поиск" />
+            </form>
+          </div>
+          <script>
+            BX.ready(function() {
+              new JCTitleSearch({
+                'AJAX_PAGE': '/press/brandbook/',
+                'CONTAINER_ID': 'title-search',
+                'INPUT_ID': 'title-search-input',
+                'MIN_QUERY_LEN': 2
+              })
+            })
+          </script>
+          <!--<form>
+              <input type="text" class="input" placeholder="Поиск">
+          </form>-->
+          <div class="icon">
+            <svg fill="none" height="36.000000" viewBox="0 0 36 36" width="36.000000" xmlns="http://www.w3.org/2000/svg"
+                 xmlns:xlink="http://www.w3.org/1999/xlink">
+              <desc>
+                Created with Pixso.
+              </desc>
+              <defs />
+              <rect id="user-profile-03" fill="#FFFFFF" fill-opacity="0" height="36.000000"
+                    transform="translate(0.000000 -0.156517)" width="36.000000" />
+              <path id="Icon"
+                    d="M13.7 25.25C14.81 25.72 15.97 25.95 17.18 25.95Q18.17 25.95 19.12 25.74Q19.91 25.57 20.65 25.25Q21.41 24.93 22.08 24.49Q22.84 23.99 23.49 23.34Q24.15 22.68 24.64 21.93Q25.09 21.25 25.41 20.5Q25.72 19.75 25.9 18.97Q26.11 18.02 26.11 17.02Q26.11 16.02 25.9 15.07Q25.72 14.29 25.41 13.54Q25.09 12.79 24.64 12.11Q24.15 11.36 23.49 10.7Q22.84 10.05 22.08 9.55Q21.41 9.11 20.65 8.79Q19.91 8.47 19.12 8.3Q18.17 8.09 17.18 8.09Q16.18 8.09 15.23 8.3Q14.45 8.47 13.7 8.79Q12.94 9.11 12.27 9.55Q11.51 10.05 10.86 10.7Q10.21 11.36 9.71 12.11Q9.27 12.79 8.95 13.54Q8.63 14.29 8.46 15.07Q8.25 16.02 8.25 17.02Q8.25 18.02 8.46 18.97Q8.63 19.75 8.95 20.5Q9.27 21.25 9.71 21.93Q10.21 22.68 10.86 23.34Q11.51 23.99 12.27 24.49Q12.94 24.93 13.7 25.25ZM18.83 24.27Q18.02 24.45 17.18 24.45Q16.33 24.45 15.53 24.27Q14.89 24.13 14.28 23.87Q13.66 23.61 13.11 23.24Q12.47 22.82 11.92 22.28Q11.37 21.73 10.96 21.09Q10.59 20.53 10.33 19.91Q10.07 19.3 9.93 18.67Q9.75 17.87 9.75 17.02Q9.75 16.17 9.93 15.37Q10.07 14.74 10.33 14.13Q10.59 13.51 10.96 12.95Q11.37 12.31 11.92 11.77Q12.47 11.22 13.11 10.8Q13.66 10.44 14.28 10.17Q14.89 9.91 15.53 9.77Q16.33 9.59 17.18 9.59Q18.02 9.59 18.83 9.77Q19.46 9.91 20.07 10.17Q20.69 10.44 21.25 10.8Q21.88 11.22 22.43 11.77Q22.98 12.31 23.4 12.95Q23.76 13.51 24.02 14.13Q24.28 14.74 24.43 15.37Q24.61 16.17 24.61 17.02Q24.61 17.87 24.43 18.67Q24.28 19.3 24.02 19.91Q23.76 20.53 23.4 21.09Q22.98 21.73 22.43 22.28Q21.88 22.82 21.25 23.24Q20.69 23.61 20.07 23.87Q19.46 24.13 18.83 24.27ZM27.53 26.31L24.25 23.04L23.19 24.1L26.46 27.37C26.76 27.67 27.23 27.67 27.53 27.37C27.82 27.07 27.82 26.61 27.53 26.31Z"
+                    fill="#1B1C21" fill-opacity="1.000000" fill-rule="evenodd" />
+            </svg>
+          </div>
+        </div>
+        <div class="profile">
+          <div class="log_in">
+            <a href="brandbook.html">Войти</a>
+          </div>
+          <div class="registration">
+            <a href="brandbook.html">Регистрация</a>
+          </div>
+        </div>
+        <div class="language">
+          <select id="lang" name="lang">
+            <option value="rus">RU</option>
+            <option value="eng">EN</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="menu">
+
+        <ul class="main">
+
+
+          <li class="dop"><a class="root-item" href="https://fsp-russia.ru/about/">О нас</a>
+            <ul class="submenu">
+
+
+              <li><a href="https://fsp-russia.ru/#second">О Федерации</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/about/rukovodstvo">Руководство</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/about/member/">Как стать членом федерации</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/about/documents/">Документы</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/about/nationalteam/">Сборная России</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/about/cooperation/">Международное сотрудничество</a></li>
+
+
+            </ul>
+          </li>
+
+          <li class="dop"><a class="root-item" href="https://fsp-russia.ru/region/">Регионы</a>
+            <ul class="submenu">
+
+
+              <li><a href="https://fsp-russia.ru/region/regions/">Контакты представителей</a></li>
+
+
+            </ul>
+          </li>
+
+          <li class="dop"><a class="root-item" href="https://fsp-russia.ru/calendar/">Календарь</a>
+            <ul class="submenu">
+
+
+              <li><a href="https://fsp-russia.ru/calendar/">Анонс</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/calendar/archive/">Архив событий</a></li>
+
+
+            </ul>
+          </li>
+
+
+          <li><a class="root-item" href="brandbook.html#">Статистика</a></li>
+
+
+          <li><a class="root-item" href="https://fsp-russia.ru/antidoping/">Антидопинг</a></li>
+
+
+          <li class="dop"><a class="root-item" href="https://fsp-russia.ru/press/">Пресс-служба</a>
+            <ul class="submenu">
+
+
+              <li><a href="https://fsp-russia.ru/press/pressservice/">ФСП в СМИ</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/press/news/">Новости</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/photovideo/">Фото и видео</a></li>
+
+
+              <li class="item-selected"><a href="brandbook.html">Брендбук</a></li>
+
+
+              <li><a href="https://fsp-russia.ru/press/logotip/">Логотипы</a></li>
+
+
+              <li><a href="brandbook.html#">Регламент взаимодействия со СМИ</a></li>
+
+
+            </ul>
+          </li>
+
+
+          <li><a class="root-item" href="https://fsp-russia.ru/contacts/">Контакты</a></li>
+
+
+        </ul>
+        <div class="menu-clear-left"></div>
+        <!--<ul class="main">
+            <li class="dop">
+                <a href="">О нас</a>
+                <ul class="submenu">
+                    <li><a href="">О Федерации</a></li>
+                    <li><a href="/completed_pages/rukovodstvo/index.php">Руководство</a></li>
+                    <li><a href="/completed_pages/member/index.php">Как стать членом федерации</a></li>
+                    <li><a href="/completed_pages/documents/index.php">Документы</a></li>
+                    <li><a href="/completed_pages/nationalteam/index.php">Сборная России</a></li>
+                    <li><a href="/completed_pages/cooperation/index.php">Международное сотрудничество</a></li>
+                </ul>
+            </li>
+            <li class="dop">
+                <a href="/completed_pages/regions/index.php">Регионы</a>
+                <ul class="submenu">
+                    <li><a href="">Контакты представителей</a></li>
+                </ul>
+            </li>
+            <li class="dop">
+                <a href="">Календарь</a>
+                <ul class="submenu">
+                    <li><a href="">Анонс</a></li>
+                    <li><a href="">Архив событий</a></li>
+                </ul>
+            </li>
+            <li><a href="">Статистика</a></li>
+            <li><a href="/completed_pages/antidoping/index.php">Антидопинг</a></li>
+            <li class="dop">
+                <a href="/completed_pages/pressservice/index.php">Пресс-служба</a>
+                <ul class="submenu">
+                    <li><a href="/completed_pages/pressservice/index.php">ФСП в СМИ</a></li>
+                    <li><a href="">Регламент взаимодействия со СМИ</a></li>
+                    <li><a href="/completed_pages/contactspress/index.php">Контакты пресс-секретаря</a></li>
+                    <li><a href="/completed_pages/photovideo/index.php">Фото и видео</a></li>
+                    <li><a href="/completed_pages/brandbook/index.php">Брендбук</a></li>
+                    <li><a href="/completed_pages/logotip/index.php">Логотипы</a></li>
+                </ul>
+            </li>
+            <li><a href="/completed_pages/contacts/index.php">Контакты</a></li>
+        </ul>-->
+      </div>
+    </div>
+  </div>
+</header>
+<header class="mobile">
+  <div class="container">
+    <div class="row">
+      <div class="logo">
+        <a href="https://fsp-russia.ru/"><img alt="logo" src="../completed_pages/images/logo_mobile.svg"></a>
+      </div>
+      <div class="buttons">
+        <!--<div class="log_in">
+            <img src="/completed_pages/images/logblack.svg" alt="user">
+        </div>-->
+        <div class="btn_menu">
+
+        </div>
+      </div>
+      <div class="click_menu">
+        <div class="search">
+          <form>
+            <input placeholder="Что ищете?" type="text">
+            <button type="submit">
+              <img alt="search" src="../completed_pages/images/search_btn.svg">
+            </button>
+          </form>
+        </div>
+        <div class="menu">
+
+          <ul class="main">
+
+
+            <li class="dop"><a class="root-item" href="https://fsp-russia.ru/about/">О нас</a>
+              <ul class="submenu">
+
+
+                <li><a href="https://fsp-russia.ru/#second">О Федерации</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/about/rukovodstvo">Руководство</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/about/member/">Как стать членом федерации</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/about/documents/">Документы</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/about/nationalteam/">Сборная России</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/about/cooperation/">Международное сотрудничество</a></li>
+
+
+              </ul>
+            </li>
+
+            <li class="dop"><a class="root-item" href="https://fsp-russia.ru/region/">Регионы</a>
+              <ul class="submenu">
+
+
+                <li><a href="https://fsp-russia.ru/region/regions/">Контакты представителей</a></li>
+
+
+              </ul>
+            </li>
+
+            <li class="dop"><a class="root-item" href="https://fsp-russia.ru/calendar/">Календарь</a>
+              <ul class="submenu">
+
+
+                <li><a href="https://fsp-russia.ru/calendar/">Анонс</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/calendar/archive/">Архив событий</a></li>
+
+
+              </ul>
+            </li>
+
+
+            <li><a class="root-item" href="brandbook.html#">Статистика</a></li>
+
+
+            <li><a class="root-item" href="https://fsp-russia.ru/antidoping/">Антидопинг</a></li>
+
+
+            <li class="dop"><a class="root-item" href="https://fsp-russia.ru/press/">Пресс-служба</a>
+              <ul class="submenu">
+
+
+                <li><a href="https://fsp-russia.ru/press/pressservice/">ФСП в СМИ</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/press/news/">Новости</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/photovideo/">Фото и видео</a></li>
+
+
+                <li class="item-selected"><a href="brandbook.html">Брендбук</a></li>
+
+
+                <li><a href="https://fsp-russia.ru/press/logotip/">Логотипы</a></li>
+
+
+                <li><a href="brandbook.html#">Регламент взаимодействия со СМИ</a></li>
+
+
+              </ul>
+            </li>
+
+
+            <li><a class="root-item" href="https://fsp-russia.ru/contacts/">Контакты</a></li>
+
+
+          </ul>
+          <div class="menu-clear-left"></div>
+          <!--<ul class="main">
+              <li class="dop">
+                  <a href="">О нас</a>
+                  <ul class="submenu">
+                      <li><a href="">О Федерации</a></li>
+                      <li><a href="/completed_pages/rukovodstvo/index.php">Руководство</a></li>
+                      <li><a href="/member/index.php">Как стать членом федерации</a></li>
+                      <li><a href="/completed_pages/documents/index.php">Документы</a></li>
+                      <li><a href="/completed_pages/nationalteam/index.php">Сборная России</a></li>
+                      <li><a href="/completed_pages/cooperation/index.php">Международное сотрудничество</a></li>
+                  </ul>
+              </li>
+              <li class="dop">
+                  <a href="/completed_pages/regions/index.php">Регионы</a>
+                  <ul class="submenu">
+                      <li><a href="">Контакты представителей</a></li>
+                  </ul>
+              </li>
+              <li class="dop">
+                  <a href="">Календарь</a>
+                  <ul class="submenu">
+                      <li><a href="">Анонс</a></li>
+                      <li><a href="">Архив событий</a></li>
+                  </ul>
+              </li>
+              <li><a href="">Статистика</a></li>
+              <li><a href="/completed_pages/antidoping/index.php">Антидопинг</a></li>
+              <li class="dop">
+                  <a href="/completed_pages/pressservice/index.php">Пресс-служба</a>
+                  <ul class="submenu">
+                      <li><a href="/completed_pages/pressservice/index.php">ФСП в СМИ</a></li>
+                      <li><a href="">Регламент взаимодействия со СМИ</a></li>
+                      <li><a href="/completed_pages/contactspress/index.php">Контакты пресс-секретаря</a></li>
+                      <li><a href="/completed_pages/photovideo/index.php">Фото и видео</a></li>
+                      <li><a href="/completed_pages/brandbook/index.php">Брендбук</a></li>
+                      <li><a href="/completed_pages/logotip/index.php">Логотипы</a></li>
+                  </ul>
+              </li>
+              <li><a href="/completed_pages/contacts/index.php">Контакты</a></li>
+          </ul>-->
+        </div>
+        <div class="contacts wid">
+          <div class="title">
+            <h3>Контакты</h3>
+          </div>
+          <div class="mail">
+            <a href="mailto:info@fsp-russia.com">info@fsp-russia.com</a>
+          </div>
+          <div class="phone">
+            <a href="tel:+74996780305">+7 (499) 678-03-05</a>
+          </div>
+          <div class="adress">
+            <p>125047, г. Москва,</p>
+            <p>2-я Брестская, д.8, этаж 9</p>
+          </div>
+        </div>
+        <div class="social_lang">
+          <div class="social_site wid">
+            <div class="site">
+              <a href="https://vk.com/russiafsp" target="_blank"><img alt="vk"
+                                                                      src="../completed_pages/images/vk_mob.svg"></a>
+            </div>
+            <div class="site">
+              <a href="https://t.me/fsprussia" target="_blank"><img alt="vk"
+                                                                    src="../completed_pages/images/tel_mob.svg"></a>
+            </div>
+          </div>
+          <div class="language">
+            <div class="rus">
+              <a href="brandbook.html">ru</a>
+            </div>
+            <div class="eng">
+              <a href="brandbook.html">en</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="main">
+  <section class="brandbook">
+    <div id="fix_button" class="title">
+      <div class="container">
+        <div class="row">
+          <h2>Брендбук</h2>
+          <div class="button">
+            <a href="https://fsp-russia.ru/files/%D0%B1%D1%80%D0%B5%D0%BD%D0%B4%D0%B1%D1%83%D0%BA.rar">Скачать
+              брендбук</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="standart">
+      <div class="container">
+        <div class="row">
+          <div class="title">
+            <h6>Стандартный вариант использования логотипа</h6>
+          </div>
+          <div class="image">
+            <img alt="logo_big" src="../completed_pages/images/logo_big.svg">
+          </div>
+          <div class="colors">
+            <div class="color blue">
+              <p>
+                #402FFF
+              </p>
+            </div>
+            <div class="color red">
+              <p>
+                #EC1D35
+              </p>
+            </div>
+            <div class="color white">
+              <p>
+                #EDEDED
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="variations black">
+      <div class="container">
+        <div class="row">
+          <div class="title">
+            <h5>Логотип / вариации</h5>
+          </div>
+          <div class="variat">
+            <div class="var fir">
+              <img alt="logo" src="../completed_pages/images/logo_01.svg">
+            </div>
+            <div class="var sec">
+              <img alt="logo" src="../completed_pages/images/logo_02.svg">
+            </div>
+            <div class="var thi">
+              <img alt="logo" src="../completed_pages/images/logo_03.svg">
+            </div>
+            <div class="var fou">
+              <img alt="logo" src="../completed_pages/images/logo_04.svg">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="variations white">
+      <div class="background">
+        <div class="row">
+          <div class="image">
+            <img alt="logo_big" src="../completed_pages/images/logo_01w.svg">
+          </div>
+          <div class="variat">
+            <div class="var fir">
+              <img alt="logo" src="../completed_pages/images/logo_02w.svg">
+            </div>
+            <div class="var sec">
+              <img alt="logo" src="../completed_pages/images/logo_03w.svg">
+            </div>
+            <div class="var thi">
+              <img alt="logo" src="../completed_pages/images/logo_04w.svg">
+            </div>
+            <div class="var fou">
+              <img alt="logo" src="../completed_pages/images/logo_05w.svg">
+            </div>
+          </div>
+          <div class="colors">
+            <div class="color blue">
+              <p>
+                #402FFF
+              </p>
+            </div>
+            <div class="color red">
+              <p>
+                #EC1D35
+              </p>
+            </div>
+            <div class="color white">
+              <p>
+                #C8C9CA
+              </p>
+            </div>
+            <div class="color black">
+              <p>
+                #1B1C21
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="variations dop">
+      <div class="container">
+        <div class="row">
+          <div class="title">
+            <h5>Логотип / дополнительный варианты</h5>
+          </div>
+          <div class="variat">
+            <div class="var fir">
+              <img alt="logo" src="../completed_pages/images/logo_big_blue.png">
+            </div>
+            <div class="var sec">
+              <img alt="logo" src="../completed_pages/images/logo_small_blue.png">
+            </div>
+            <div class="var thi">
+              <img alt="logo" src="../completed_pages/images/logo_white1.png">
+            </div>
+            <div class="var fou">
+              <img alt="logo" src="../completed_pages/images/logo_white2.png">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fonts">
+      <div class="container">
+        <div class="row">
+          <div class="title">
+            <h5>Шрифт</h5>
+          </div>
+          <div class="name_font">
+            <div class="font">
+              <p>
+                JetBrains Mono
+              </p>
+              <p class="opis">
+                Шрифт JetBrains Mono распространяется бесплатно под&nbsp;лицензией SIL Open Font License 1.1 и может
+                использоваться как&nbsp;в&nbsp;коммерческих, так&nbsp;и&nbsp;в&nbsp;некоммерческих целях. Используя
+                шрифт, не обязательно упоминать JetBrains
+              </p>
+            </div>
+            <div class="image_font">
+              <img alt="font" src="../completed_pages/images/font.png">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="graphics">
+      <div class="container">
+        <div class="row">
+          <div class="title">
+            <h5>Графика / Основные элементы</h5>
+          </div>
+          <div class="items">
+            <div class="item">
+              <div class="image">
+                <img alt="image" src="../completed_pages/images/face1.png">
+              </div>
+              <div class="title">
+                <p>
+                  Голова&nbsp;— потенциальный участник чемпионатов по&nbsp;спортивному программированию
+                </p>
+              </div>
+            </div>
+            <div class="item">
+              <div class="image">
+                <img alt="image" src="../completed_pages/images/map1.png">
+              </div>
+              <div class="title">
+                <p>
+                  Карта России — обозначает регионы, в&nbsp;которых есть или будут открыты представительства ФСП
+                </p>
+              </div>
+            </div>
+            <div class="item">
+              <div class="image">
+                <img alt="image" src="../completed_pages/images/lineline1.png">
+              </div>
+              <div class="title">
+                <p>
+                  Линии графики — объединяют региональные представительства
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="examples">
+      <div class="container">
+        <div class="row">
+          <div class="title">
+            <h5>Примеры использования графики</h5>
+          </div>
+          <div class="image">
+            <img alt="example" src="../completed_pages/images/example.png">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="photo">
+      <div class="row">
+        <div class="image">
+          <img alt="example" src="../completed_pages/images/photo.jpeg">
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="logo">
+        <img alt="logo" src="../completed_pages/images/logo_foot.svg">
+      </div>
+      <div class="button_up">
+        <p>Наверх</p>
+        <div id="button_up" class="btn">
+          <a href="brandbook.html#">
+            <svg fill="none" height="6.000000" viewBox="0 0 11 6" width="11.000000"
+                 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <desc>
+                Created with Pixso.
+              </desc>
+              <defs />
+              <path id="Icon" d="M0 5L5 0L10 5" stroke="#FFFFFF" stroke-linejoin="round"
+                    stroke-opacity="1.000000" stroke-width="1.000000" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-6">
+        <div class="contacts wid">
+          <div class="title">
+            <h3>Контакты</h3>
+          </div>
+          <div class="mail">
+            <a href="mailto:info@fsp-russia.ru">info@fsp-russia.ru</a>
+          </div>
+          <div class="phone">
+            <a href="tel:+74996780305">+7 (499) 678-03-05</a>
+          </div>
+          <div class="adress">
+            <p>125047, г. Москва,</p>
+            <p>2-я Брестская, д.8, этаж 9</p>
+          </div>
+        </div>
+        <div class="press_center wid">
+          <div class="title">
+            <h3>Пресс-служба</h3>
+          </div>
+          <div class="mail">
+            <a href="mailto:press@fsp-russia.ru">press@fsp-russia.ru</a>
+          </div>
+          <div class="phone">
+            <a href="tel:+79165282431"></a>
+          </div>
+        </div>
+        <div class="qr_code wid">
+          <div class="image">
+            <img alt="qrcode" src="../completed_pages/images/vk_foot.svg">
+          </div>
+          <div class="image">
+            <img alt="qrcode" src="../completed_pages/images/telegram_foot.svg">
+          </div>
+        </div>
+        <div class="social_site wid">
+          <div class="title">
+            <h3>Социальные сети</h3>
+          </div>
+          <div class="site">
+            <a href="https://vk.com/russiafsp" target="_blank">vk.com/russiafsp</a>
+          </div>
+          <div class="site">
+            <a href="https://t.me/fsprussia" target="_blank">t.me/fsprussia</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="title">
+          <h3>Помогите сделать сервис лучше, напишите отзыв</h3>
+        </div>
+
+
+        <form action="brandbook.html" method="POST">
+          <input id="sessid" name="sessid" type="hidden" value="a846dd799b4ba514bcf14ded57c8a6cb" /> <textarea
+          cols="40" name="MESSAGE" placeholder="Предлагаю ..." rows="5"></textarea>
+
+          <input name="PARAMS_HASH" type="hidden" value="223a678437de01e68df2a39259c6b7e2">
+          <input name="submit" type="submit" value="Отправить">
+        </form>
+        <!--                <form action="">
+                            <textarea name="message" id="comment" placeholder="Предлагаю ..."></textarea>
+                            <input type="submit" name="submit">
+                        </form>-->
+      </div>
+    </div>
+    <div class="row">
+      <div class="politika">
+        <a
+          href="https://fsp-russia.ru/files/%D0%9F%D0%BE%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%BE%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0%20%D0%BF%D0%B4%D0%BD%20(1).pdf">Политика
+          конфиденциальности</a>
+      </div>
+      <div class="polzovanie">
+        <a href="brandbook.html">Условия соглашения</a>
+      </div>
+      <div class="name">
+        <p>Федерация спортивного программирования России</p>
+      </div>
+      <div class="year">
+        <p>©2025</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script crossorigin="anonymous"
+        integrity="sha512-+k1pnlgt4F1H8L7t3z95o3/KO+o78INEcXTbnoJQ/F2VqDVhWoaiVml/OEHv9HsVgxUaVW+IbiZPUJQfF/YxZw=="
+        referrerpolicy="no-referrer" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+<script src="../completed_pages/js/custom.js%3F1240347284" type="text/javascript"></script>
+
+
+<script>
+  AOS.init()
+</script>
+
+
+</body>
+</html>

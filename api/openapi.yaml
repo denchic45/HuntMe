@@ -1,0 +1,1167 @@
+openapi: 3.0.3
+info:
+  title: HuntMe API Specification
+  description: >
+    Спецификация REST API для платформы-агрегатора ИТ-вакансий HuntMe.
+    Платформа реализует обратную механику подбора соискателей с верифицированным
+    профилем достижений ФСП (Федерация спортивного программирования).
+  version: 1.0.0
+  contact:
+    name: HuntMe Team
+
+servers:
+  - url: /api/v1
+    description: Основной сервер API v1
+
+paths:
+  # ==========================================
+  # 1. АВТОРИЗАЦИЯ И ИДЕНТИФИКАЦИЯ (AUTH)
+  # ==========================================
+  /auth/register:
+    post:
+      summary: Регистрация нового пользователя
+      description: Регистрация соискателя или работодателя по email и паролю.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          description: Пользователь с таким email уже существует
+
+  /auth/login:
+    post:
+      summary: Вход в систему
+      description: Аутентификация по email и паролю с выдачей JWT токенов.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Неверный email или пароль
+
+  /auth/refresh:
+    post:
+      summary: Обновление access-токена
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Токен успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Невалидный или просроченный refresh-токен
+
+  /auth/me:
+    get:
+      summary: Получение данных текущего сеанса
+      tags:
+        - Auth
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Данные авторизованного пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /auth/logout:
+    post:
+      summary: Выход из системы
+      tags:
+        - Auth
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Сеанс завершен
+
+  # ==========================================
+  # 2. ЛИЧНЫЙ КАБИНЕТ СОИСКАТЕЛЯ (CANDIDATE)
+  # ==========================================
+  /candidate/profile:
+    get:
+      summary: Получение профиля соискателя
+      tags:
+        - Candidate Profile
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Полные данные профиля соискателя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+    put:
+      summary: Обновление профиля соискателя
+      description: Редактирование личных данных, опыта, навыков и желаемого уровня ЗП.
+      tags:
+        - Candidate Profile
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCandidateProfileRequest'
+      responses:
+        '200':
+          description: Профиль успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /candidate/profile/resume:
+    post:
+      summary: Загрузка резюме в формате PDF (автораспознавание)
+      description: Распознает ФИО, контакты, стек, стаж и роли из загруженного PDF-файла.
+      tags:
+        - Candidate Profile
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Файл резюме PDF
+      responses:
+        '200':
+          description: Резюме распознано, профиль обогащен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+        '400':
+          description: Неверный формат файла (ожидается PDF)
+
+  /candidate/fsp:
+    post:
+      summary: Привязка профиля ФСП (Федерация спортивного программирования)
+      description: Связывает профиль кандидата с ID участника ФСП и подтягивает подтвержденные достижения.
+      tags:
+        - Candidate Profile
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fspId
+              properties:
+                fspId:
+                  type: string
+                  example: "FSP-2026-8849"
+      responses:
+        '200':
+          description: ФСП ID успешно привязан и достижения подтверждены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+        '404':
+          description: Участник с таким FSP ID не найден
+
+  /candidate/privacy:
+    patch:
+      summary: Настройки приватности и согласий
+      tags:
+        - Candidate Profile
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isPublic:
+                  type: boolean
+                  description: Участвовать ли в выдаче работодателям
+                privacyAgreement152:
+                  type: boolean
+                  description: Согласие на обработку персональных данных (152-ФЗ)
+                hideCurrentCompany:
+                  type: boolean
+                  description: Скрывать профиль от текущего работодателя
+      responses:
+        '200':
+          description: Настройки приватности обновлены
+
+  # ==========================================
+  # 3. ТЕСТИРОВАНИЕ И КАТЕГОРИЗАЦИЯ СОИСКАТЕЛЯ
+  # ==========================================
+  /candidate/testing/survey:
+    post:
+      summary: Сохранение результатов первичного опроса
+      description: Выбор специализации, сферы деятельности и заявленного грейда.
+      tags:
+        - Candidate Testing
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestingSurveyRequest'
+      responses:
+        '200':
+          description: Опрос пройден, создан тест под заявленный грейд
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestingSession'
+
+  /candidate/testing/start:
+    post:
+      summary: Запуск сессии тестирования
+      description: Генерирует или возвращает уникальный набор заданий для подтверждения грейда.
+      tags:
+        - Candidate Testing
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Задания тестирования успешно сформированы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestingSession'
+
+  /candidate/testing/submit:
+    post:
+      summary: Отправка ответов на тест и присвоение категории
+      description: Рассчитывает балл, определяет подтвержденный грейд и присваивает итоговую категорию.
+      tags:
+        - Candidate Testing
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestSubmitRequest'
+      responses:
+        '200':
+          description: Тест пройден, категория обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResultResponse'
+
+  # ==========================================
+  # 4. ПОИСК СОИСКАТЕЛЕЙ И ПОДБОРКА (EMPLOYER)
+  # ==========================================
+  /employer/company:
+    get:
+      summary: Получение профиля компании
+      tags:
+        - Employer
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerProfile'
+
+    put:
+      summary: Обновление профиля компании
+      tags:
+        - Employer
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployerProfile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerProfile'
+
+  /employer/candidates:
+    get:
+      summary: Поиск соискателей в банке кандидатов
+      description: >
+        Доступ ко всей базе кандидатов с фильтрацией по категории, грейду,
+        стеку и наличию верифицированных достижений ФСП.
+        ВАЖНО: Контактные данные кандидатов в выдаче СКРЫТЫ.
+      tags:
+        - Employer Search
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: specialization
+          in: query
+          description: Специализация (например, Backend, Frontend, DevOps)
+          schema:
+            type: string
+        - name: grade
+          in: query
+          description: Подтвержденный грейд (Junior, Middle, Senior, Lead)
+          schema:
+            type: string
+        - name: skills
+          in: query
+          description: Список ключевых навыков через запятую (например, Vue, TypeScript, Go)
+          schema:
+            type: string
+        - name: hasFspVerified
+          in: query
+          description: Фильтрует участников с подтвержденными достижениями ФСП
+          schema:
+            type: boolean
+        - name: salaryMax
+          in: query
+          description: Максимальный зарплатный бюджет (в рублях)
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список анонимизированных карточек кандидатов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateSearchListResponse'
+
+  /employer/candidates/{id}:
+    get:
+      summary: Просмотр анонимизированной карточки кандидата
+      description: >
+        Детальная информация о кандидате (стек, тесты, категория, история ФСП).
+        Контактные данные (ФИО, email, телефон) скрыты, пока кандидат не примет приглашение.
+      tags:
+        - Employer Search
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateDetail'
+        '404':
+          description: Кандидат не найден
+
+  /employer/candidates/match:
+    post:
+      summary: Умный подбор кандидатов под описание потребности
+      description: >
+        Работодатель описывает потребность (роль, стек, грейд, задачи),
+        алгоритм формирует ранжированную подборку с текстом объяснения (matchExplanation).
+      tags:
+        - Employer Search
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchRequirementRequest'
+      responses:
+        '200':
+          description: Ранжированная подборка кандидатов с обоснованием
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchResponse'
+
+  # ==========================================
+  # 5. ПРИГЛАШЕНИЯ И ВЫХОД НА КОНТАКТ (INVITATIONS)
+  # ==========================================
+  /employer/invitations:
+    post:
+      summary: Направление приглашения конкретному кандидату
+      description: >
+        Работодатель направляет приглашение соискателю с предложением.
+        ОБЯЗАТЕЛЬНО указывается уровень заработной платы (вилка от-до в рублях).
+      tags:
+        - Invitations
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvitationRequest'
+      responses:
+        '201':
+          description: Приглашение успешно отправлено кандидату
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+
+    get:
+      summary: Список отправленных компанией приглашений
+      tags:
+        - Invitations
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitation'
+
+  /candidate/invitations:
+    get:
+      summary: Входящие приглашения соискателя от работодателей
+      tags:
+        - Invitations
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitation'
+
+  /candidate/invitations/{id}/accept:
+    post:
+      summary: Принятие приглашения соискателем
+      description: >
+        При принятии статус меняется на `accepted`, и контакты соискателя
+        раскрываются работодателю.
+      tags:
+        - Invitations
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Приглашение принято, контакты переданы работодателю
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+
+  /candidate/invitations/{id}/reject:
+    post:
+      summary: Отклонение приглашения соискателем
+      tags:
+        - Invitations
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Приглашение отклонено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+
+# ==========================================
+# 6. СХЕМЫ ДАННЫХ (COMPONENTS & SCHEMAS)
+# ==========================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    400BadRequest:
+      description: Неверные входные параметры
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    401Unauthorized:
+      description: Токен не предоставлен или недействителен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    403Forbidden:
+      description: Доступ запрещен для текущей роли
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "BAD_REQUEST"
+        message:
+          type: string
+          example: "Обязательное поле salaryMin должно быть больше 0"
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - role
+      properties:
+        id:
+          type: string
+          example: "usr_10293"
+        email:
+          type: string
+          example: "developer@example.com"
+        role:
+          type: string
+          enum: [ candidate, employer, admin ]
+          example: "candidate"
+        emailVerified:
+          type: boolean
+          example: true
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: "candidate@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "SecretPassword123!"
+        role:
+          type: string
+          enum: [ candidate, employer ]
+          example: "candidate"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "candidate@example.com"
+        password:
+          type: string
+          example: "SecretPassword123!"
+
+    AuthTokens:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          example: "d9b20e0d-0348-43e8-8a89-290d2380582d"
+
+    AuthResponse:
+      type: object
+      required:
+        - user
+        - tokens
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        tokens:
+          $ref: '#/components/schemas/AuthTokens'
+
+    CandidateProfile:
+      type: object
+      required:
+        - id
+        - fullName
+        - specialization
+        - category
+      properties:
+        id:
+          type: string
+          example: "cand_9482"
+        fullName:
+          type: string
+          example: "Алексей Иванов"
+        email:
+          type: string
+          example: "alexey@example.com"
+        phone:
+          type: string
+          example: "+7 (999) 123-45-67"
+        city:
+          type: string
+          example: "Москва"
+        specialization:
+          type: string
+          example: "Backend Developer"
+        claimedGrade:
+          type: string
+          enum: [ Junior, Middle, Senior, Lead ]
+          example: "Middle"
+        verifiedGrade:
+          type: string
+          enum: [ Junior, Middle, Senior, Lead ]
+          example: "Middle"
+        category:
+          type: string
+          example: "Backend-разработчик с опытом (Middle)"
+        experienceYears:
+          type: number
+          example: 3.5
+        desiredSalary:
+          type: integer
+          description: Желаемая ЗП в рублях
+          example: 220000
+        skills:
+          type: array
+          items:
+            type: string
+          example: [ "Go", "PostgreSQL", "Docker", "Redis", "gRPC" ]
+        softSkills:
+          type: array
+          items:
+            type: string
+          example: [ "Командная работа", "Тайм-менеджмент" ]
+        fspId:
+          type: string
+          nullable: true
+          example: "FSP-2026-8849"
+        fspAchievements:
+          type: array
+          items:
+            $ref: '#/components/schemas/FspAchievement'
+        testingStatus:
+          type: string
+          enum: [ not_started, survey_passed, test_in_progress, verified ]
+          example: "verified"
+        lastTestDate:
+          type: string
+          format: date-time
+          example: "2026-09-15T10:00:00Z"
+        canRetakeTestAfter:
+          type: string
+          format: date-time
+          description: Дата, начиная с которой разрешена пересдача (раз в 3 месяца)
+          example: "2026-12-15T10:00:00Z"
+
+    UpdateCandidateProfileRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        phone:
+          type: string
+        city:
+          type: string
+        specialization:
+          type: string
+        experienceYears:
+          type: number
+        desiredSalary:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+        softSkills:
+          type: array
+          items:
+            type: string
+
+    FspAchievement:
+      type: object
+      required:
+        - id
+        - title
+        - eventType
+        - rank
+      properties:
+        id:
+          type: string
+          example: "fsp_ach_12"
+        title:
+          type: string
+          example: "Всероссийский хакатон ФСП по алгоритмам 2025"
+        eventType:
+          type: string
+          example: "Хакатон / Спортивное программирование"
+        rank:
+          type: string
+          example: "1 место (Победитель)"
+        date:
+          type: string
+          format: date
+          example: "2025-11-20"
+        score:
+          type: number
+          example: 98.5
+
+    TestingSurveyRequest:
+      type: object
+      required:
+        - specialization
+        - claimedGrade
+      properties:
+        specialization:
+          type: string
+          example: "Backend Developer"
+        claimedGrade:
+          type: string
+          enum: [ Junior, Middle, Senior, Lead ]
+          example: "Middle"
+
+    TestingSession:
+      type: object
+      required:
+        - sessionId
+        - questions
+      properties:
+        sessionId:
+          type: string
+          example: "test_sess_7719"
+        claimedGrade:
+          type: string
+          example: "Middle"
+        questionsCount:
+          type: integer
+          example: 5
+        questions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: "q_1"
+              type:
+                type: string
+                example: "code_task"
+              title:
+                type: string
+                example: "Оптимизация запроса к СУБД и алгоритм кэширования"
+              description:
+                type: string
+                example: "Предложите способ решения задачи..."
+              options:
+                type: array
+                items:
+                  type: string
+
+    TestSubmitRequest:
+      type: object
+      required:
+        - sessionId
+        - answers
+      properties:
+        sessionId:
+          type: string
+          example: "test_sess_7719"
+        answers:
+          type: array
+          items:
+            type: object
+            required:
+              - questionId
+              - answer
+            properties:
+              questionId:
+                type: string
+                example: "q_1"
+              answer:
+                type: string
+                example: "Использование индексного покрытия и LRU кэша"
+
+    TestResultResponse:
+      type: object
+      required:
+        - score
+        - verifiedGrade
+        - assignedCategory
+      properties:
+        score:
+          type: number
+          example: 85.0
+        verifiedGrade:
+          type: string
+          example: "Middle"
+        assignedCategory:
+          type: string
+          example: "Backend-разработчик с опытом (Middle)"
+        feedback:
+          type: string
+          example: "Тест пройден успешно! Категория подтверждена."
+
+    EmployerProfile:
+      type: object
+      required:
+        - companyName
+        - industry
+      properties:
+        id:
+          type: string
+          example: "emp_551"
+        companyName:
+          type: string
+          example: "Яндекс / СберДеваайсы"
+        industry:
+          type: string
+          example: "Финтех / ИТ-Инфраструктура"
+        description:
+          type: string
+          example: "Разрабатываем высоконагруженные сервисы..."
+        website:
+          type: string
+          example: "https://company.ru"
+        contactPerson:
+          type: string
+          example: "Мария Смирнова (HRD)"
+
+    CandidateSearchItem:
+      type: object
+      required:
+        - candidateId
+        - category
+        - verifiedGrade
+        - skills
+        - hasFspVerified
+      description: >
+        Анонимизированная карточка соискателя в выдаче поиска.
+        Личные контакты (email, телефон, фамилия) скрыты.
+      properties:
+        candidateId:
+          type: string
+          example: "cand_9482"
+        displayName:
+          type: string
+          description: Скрыто или имя без фамилии
+          example: "Алексей И."
+        city:
+          type: string
+          example: "Москва"
+        specialization:
+          type: string
+          example: "Backend Developer"
+        verifiedGrade:
+          type: string
+          example: "Middle"
+        category:
+          type: string
+          example: "Backend-разработчик с опытом (Middle)"
+        experienceYears:
+          type: number
+          example: 3.5
+        desiredSalary:
+          type: integer
+          example: 220000
+        skills:
+          type: array
+          items:
+            type: string
+          example: [ "Go", "PostgreSQL", "Docker" ]
+        hasFspVerified:
+          type: boolean
+          example: true
+        fspAchievementsCount:
+          type: integer
+          example: 2
+        testScore:
+          type: number
+          example: 85.0
+
+    CandidateDetail:
+      allOf:
+        - $ref: '#/components/schemas/CandidateSearchItem'
+        - type: object
+          properties:
+            fspAchievements:
+              type: array
+              items:
+                $ref: '#/components/schemas/FspAchievement'
+            contactsUnlocked:
+              type: boolean
+              description: True, только если кандидат принял приглашение от текущего работодателя
+              example: false
+            contactDetails:
+              type: object
+              nullable: true
+              properties:
+                email:
+                  type: string
+                  example: "alexey@example.com"
+                phone:
+                  type: string
+                  example: "+7 (999) 123-45-67"
+                fullName:
+                  type: string
+                  example: "Иванов Алексей Сергеевич"
+
+    CandidateSearchListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidateSearchItem'
+        total:
+          type: integer
+          example: 42
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+
+    MatchRequirementRequest:
+      type: object
+      required:
+        - roleTitle
+        - targetGrade
+        - requiredSkills
+      properties:
+        roleTitle:
+          type: string
+          example: "Senior Go Developer"
+        targetGrade:
+          type: string
+          enum: [ Junior, Middle, Senior, Lead ]
+          example: "Senior"
+        requiredSkills:
+          type: array
+          items:
+            type: string
+          example: [ "Go", "Kafka", "PostgreSQL", "Kubernetes" ]
+        projectDescription:
+          type: string
+          example: "Проект по созданию распределенной платежной системы..."
+        maxSalaryBudget:
+          type: integer
+          example: 350000
+
+    MatchResultItem:
+      type: object
+      required:
+        - candidate
+        - matchScore
+        - matchExplanation
+      properties:
+        candidate:
+          $ref: '#/components/schemas/CandidateSearchItem'
+        matchScore:
+          type: number
+          description: Процент соответствия (0-100%)
+          example: 94.5
+        matchExplanation:
+          type: string
+          description: Обоснование попадания кандидата в подборку (объяснимость выдачи)
+          example: "Подтвержденный грейд Senior, 100% совпадение по стек (Go, Kafka), 1-е место на хакатоне ФСП по алгоритмам."
+
+    MatchResponse:
+      type: object
+      required:
+        - matches
+      properties:
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchResultItem'
+
+    CreateInvitationRequest:
+      type: object
+      required:
+        - candidateId
+        - offerDescription
+        - salaryMin
+        - salaryMax
+        - contactMethod
+      properties:
+        candidateId:
+          type: string
+          example: "cand_9482"
+        offerDescription:
+          type: string
+          example: "Приглашаем в команду разработки Финтех направления на позицию Backend Go Developer..."
+        salaryMin:
+          type: integer
+          description: Обязательное поле! Мин. ЗП в рублях
+          example: 220000
+        salaryMax:
+          type: integer
+          description: Обязательное поле! Макс. ЗП в рублях
+          example: 280000
+        contactMethod:
+          type: string
+          example: "Telegram: @hr_yandex_manager / Телефон: +7 (903) 000-00-00"
+
+    Invitation:
+      type: object
+      required:
+        - id
+        - employerCompany
+        - candidateId
+        - offerDescription
+        - salaryMin
+        - salaryMax
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: "inv_8820"
+        candidateId:
+          type: string
+          example: "cand_9482"
+        employerId:
+          type: string
+          example: "emp_551"
+        employerCompany:
+          type: string
+          example: "Яндекс Девайсы"
+        offerDescription:
+          type: string
+          example: "Приглашаем в команду..."
+        salaryMin:
+          type: integer
+          example: 220000
+        salaryMax:
+          type: integer
+          example: 280000
+        contactMethod:
+          type: string
+          example: "Telegram: @hr_yandex_manager"
+        status:
+          type: string
+          enum: [ sent, viewed, accepted, rejected ]
+          example: "sent"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-06T10:00:00Z"
+        candidateContacts:
+          type: object
+          nullable: true
+          description: Раскрываются только при статусе accepted
+          properties:
+            fullName:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
