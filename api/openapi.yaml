@@ -63,6 +63,43 @@ paths:
         '401':
           description: Неверный email или пароль
 
+  /auth/reset:
+    post:
+      summary: Запрос на сброс пароля
+      description: Сброс пароля
+      tags:
+        - Auth
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetRequest'
+      responses:
+        '204':
+          description: Письмо на почту отправлено
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    patch:
+      summary: Сброс пароля с помощью ссылки
+      description: Сброс пароля и восстановление доступа к аккаунту
+      tags:
+        - Auth  
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetForm' 
+      responses:
+        '204':
+          description: Аккаунт восстановлен
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '422':
+          description: Пароль не отличается от прошлого
+
+
   /auth/refresh:
     post:
       summary: Обновление access-токена
@@ -116,6 +153,65 @@ paths:
       responses:
         '200':
           description: Сеанс завершен
+  
+  /auth/email:
+    post:
+      summary: Запрос на смену email
+      description: Запрос на смену email и отправка письма на почту
+      tags:
+        - Auth
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChange'
+      responses:
+        '204':
+          description: Письмо на почту отправлено
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          description: Неверный пароль
+    patch:
+      summary: Подтверждение смены email
+      description: Подтверждение смены email с помощью ссылки
+      tags:
+        - Auth  
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChangeToken' 
+      responses:
+        '204':
+          description: Почта изменена
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '422':
+          description: Почта не отличается от прошлого
+
+  /auth/password:
+    patch:
+      summary: Смена пароля
+      description: Смена пароля авторизованного пользователя
+      tags:
+        - Auth 
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+      responses:
+        '204':
+          description: Пароль изменён
+        '401':
+          description: Неверный текущий пароль
+        '422':
+          description: Пароль не отличается от прошлого
+
 
   # ==========================================
   # 2. ЛИЧНЫЙ КАБИНЕТ СОИСКАТЕЛЯ (CANDIDATE)
@@ -325,6 +421,7 @@ paths:
         - BearerAuth: [ ]
       responses:
         '200':
+          description: Профиль компании успешно получен
           content:
             application/json:
               schema:
@@ -344,6 +441,7 @@ paths:
               $ref: '#/components/schemas/EmployerProfile'
       responses:
         '200':
+          description: Профиль успешно обновлен
           content:
             application/json:
               schema:
@@ -422,6 +520,7 @@ paths:
             type: string
       responses:
         '200':
+          description: Карточка кандидата получена
           content:
             application/json:
               schema:
@@ -488,6 +587,7 @@ paths:
         - BearerAuth: [ ]
       responses:
         '200':
+          description: Список отправленных компанией приглашений успешно получен
           content:
             application/json:
               schema:
@@ -504,6 +604,7 @@ paths:
         - BearerAuth: [ ]
       responses:
         '200':
+          description: Входящие приглашения успешно получены
           content:
             application/json:
               schema:
@@ -568,7 +669,7 @@ components:
 
   responses:
     400BadRequest:
-      description: Неверные входные параметры
+      description: Неверные параметры
       content:
         application/json:
           schema:
@@ -679,6 +780,71 @@ components:
           $ref: '#/components/schemas/User'
         tokens:
           $ref: '#/components/schemas/AuthTokens'
+
+    ResetRequest:
+      type: object
+      required:
+        - email 
+      properties:
+        email:
+          type: string
+          format: email
+          example: "candidate@example.com"
+
+    ResetForm:
+      type: object
+      required:
+        - email 
+      properties:
+        resetToken:
+          type: string
+          example: "fds9-8gfdg432-vxfdshu6-i9eu"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "SecretPassword123!"
+
+    EmailChange:
+      type: object
+      required:
+        - newEmail
+        - password 
+      properties:
+        newEmail:
+          type: string
+          format: email
+          example: "candidate@example.com"
+        password:
+          type: string
+          format: email
+          example: "candidate@example.com"
+
+    EmailChangeToken:
+      type: object
+      required:
+        - email 
+      properties:
+        emailChangeToken:
+          type: string
+          example: "jfd9@hfdfsi@dvnc"
+    
+    PasswordChange:
+      type: object
+      required:
+        - newEmail
+        - password 
+      properties:
+        oldPassword:
+          type: string
+          format: password
+          minLength: 8
+          example: "SecretPassword123!"
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          example: "SecretPassword123!"
 
     CandidateProfile:
       type: object
