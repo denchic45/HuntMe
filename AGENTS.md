@@ -8,24 +8,46 @@
 
 ## 1. Главные архитектурные законы проекта
 
-1. **API-First и единый источник правды:**
+1. **Vertical Slice Architecture & Feature-Sliced Design (FSD):**
+    - Кодовая база организуется по принципу **вертикальных срезов (Vertical Slices / Features)**.
+    - Каждая бизнес-фича (авторизация, профиль кандидата, движок адаптивного тестирования, поиск работодателя, офферы и
+      инвайты, верификация ФСП) инкапсулирует свои компоненты, логику, типы и работу с API.
+    - Горизонтальные общие слои используются исключительно для переиспользуемого фундамента (`shared/common`, базовый
+      HTTP-клиент, дизайн-система).
+    - **Правило однонаправленного потока зависимостей:** модули нижних слоев никогда не импортируют код из верхних; фичи
+      одного уровня изолированы друг от друга и оркеструются через страницы (`views/pages`) или глобальные сторы.
+
+2. **Composable-Driven разработка:**
+    - Вся реактивная бизнес-логика, асинхронные цепочки, сайд-эффекты и состояние пользовательских сценариев выносятся в
+      строго типизированные **композаблы (`composables/`)**.
+    - Vue-компоненты остаются тонкими (Thin Components) и декларативными: они отвечают только за верстку, привязку
+      данных из композабла и проброс пользовательских событий.
+    - Композаблы проектируются по стандартам VueUse: возвращают реактивные `ref`/`computed`, методы действий, флаги
+      состояния (`isLoading`, `error`, `data`) и очищают сайд-эффекты через `onScopeDispose` / `onUnmounted`.
+
+3. **API-First и единый источник правды:**
     - Источником истины для моделей данных, параметров запросов и форматов ответов является спецификация [
       `api/openapi.yaml`](file:///home/denis/WebstormProjects/HuntMe/api/openapi.yaml).
     - Любой новый запрос, DTO или композабл должны строго соответствовать типам и схемам из OpenAPI. Запрещено
       произвольно переименовывать поля или менять типы без явного согласования.
-2. **Принцип единственной ответственности (Single Responsibility Principle):**
+
+4. **Принцип единственной ответственности (Single Responsibility Principle):**
     - Один файл — одна четкая задача.
     - Если компонент превышает **150–200 строк**, он обязан быть декомпозирован на подкомпоненты (`components/`) и
       вынесенную логику (`composables/`).
-3. **Строгая изоляция слоев (Layered Architecture):**
-    - **UI-слой (SFC Components):** отвечает только за представление, верстку, передачу props, перехват пользовательских
-      событий и вызов методов. Компоненты **не делают прямых HTTP-запросов** и не содержат тяжелой бизнес-логики.
-    - **Слой состояния и бизнес-логики (Composables & Pinia Stores):** управление состоянием, фильтрацией, валидацией
-      сценариев, вызов API-сервисов.
-    - **Слой API и сервисов (`src/api/`):** транспорт данных (Axios/Fetch), сериализация, обработка HTTP-статусов,
-      кэширование и режим fallback-моков.
-    - **Слой типов (`src/types/`):** TypeScript-интерфейсы, DTO, схемы Zod.
-4. **Запрет на неявные зависимости и раздувание стека:**
+
+5. **Строгая изоляция слоев (Layered Isolation):**
+    - **UI-слой (SFC Components):** только представление, верстка, Tailwind-классы, слоты, события. **Компоненты не
+      делают прямых HTTP-запросов.**
+    - **Слой бизнес-логики (Domain Composables):** валидация, расчеты скоринга, переходы сценариев, управление
+      локальным/сессионным состоянием.
+    - **Слой глобального состояния (Pinia Stores):** только межмодульное состояние (текущая сессия/токены, глобальный
+      профиль, уведомления).
+    - **Слой API и сервисов (`src/api/`):** транспорт данных (Axios), перехватчики, сериализация, кэширование и режим
+      fallback-моков.
+    - **Слой контрактов и валидации (`src/types/`):** TypeScript-интерфейсы DTO и Zod-схемы.
+
+6. **Запрет на неявные зависимости и раздувание стека:**
     - Использовать строго утвержденный стек проекта. Запрещено устанавливать новые npm-пакеты без явного запроса
       пользователя.
 
@@ -39,19 +61,76 @@
 - **Стилизация:** Tailwind CSS v4 + кастомная дизайн-система ФСП
 - **UI-библиотека компонентов:** PrimeVue 5+ (с кастомным пресетом `fsp-preset.ts`) + PrimeIcons
 - **Управление состоянием:** Pinia 3+ с плагином `pinia-plugin-persistedstate`
-- **Маршрутизация:** Vue Router 4+ (с role-based guard: соискатель / работодатель / гость)
+- **Маршрутизация:** Vue Router 4+ (с role-based guards: кандидат / работодатель / гость)
 - **Формы и валидация:** Vee-Validate 4+ и Zod 3+
 - **Утилиты:** `@vueuse/core`, `date-fns`, `axios`
 - **Тестирование:** Vitest + `@vue/test-utils`
 
 ---
 
-## 3. Официальные стандарты Vue.js (Vue Style Guide)
+## 3. Архитектура Vertical Slice и организация Composable-Driven
+
+### 3.1. Структура вертикального среза (Feature Slice)
+
+Каждый доменный срез объединяет всё необходимое для изолированной работы пользовательской фичи:
+
+```
+feature-[name]/
+├── components/       # Локальные UI-компоненты среза
+├── composables/      # Доменная логика и стейт сценариев (useFeatureName.ts)
+├── api/              # Эндпоинты и мапперы API для данной фичи
+├── types/            # Специфичные интерфейсы и Zod-схемы
+└── index.ts          # Публичный интерфейс фичи (Public API)
+```
+
+### 3.2. Паттерны Composable-Driven Logic
+
+Композаблы строятся по единому стандарту:
+
+```ts
+export function useCandidateSearch(initialFilters?: CandidateFilters) {
+  const isLoading = ref(false);
+  const error = ref<string | null>(null);
+  const candidates = ref<Candidate[]>([]);
+  const totalCount = ref(0);
+
+  const hasResults = computed(() => candidates.value.length > 0);
+  const isEmpty = computed(() => !isLoading.value && !error.value && candidates.value.length === 0);
+
+  async function fetchCandidates(filters: CandidateFilters) {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await candidateApi.search(filters);
+      candidates.value = response.data.items;
+      totalCount.value = response.data.total;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Не удалось загрузить кандидатов';
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  return {
+    candidates: readonly(candidates),
+    totalCount: readonly(totalCount),
+    isLoading: readonly(isLoading),
+    error: readonly(error),
+    hasResults,
+    isEmpty,
+    fetchCandidates,
+  };
+}
+```
+
+---
+
+## 4. Официальные стандарты Vue.js (Vue Style Guide)
 
 Разработка ведется в строгом соответствии с [Официальным стайлгайдом Vue.js](https://vuejs.org/style-guide/). Ниже
 зафиксированы обязательные правила:
 
-### 3.1. Приоритет А: Обязательно к исполнению (Предотвращение ошибок)
+### 4.1. Приоритет А: Обязательно к исполнению (Предотвращение ошибок)
 
 * **Имена компонентов из нескольких
   слов ([Rule A-1](https://vuejs.org/style-guide/rules-essential.html#use-multi-word-component-names)):**
@@ -88,7 +167,7 @@
   Использовать классы Tailwind CSS. При необходимости написания кастомного CSS использовать исключительно
   `<style scoped>`.
 
-### 3.2. Приоритет B: Настоятельно рекомендуется (Читаемость и поддержка)
+### 4.2. Приоритет B: Настоятельно рекомендуется (Читаемость и поддержка)
 
 * **Именование файлов
   компонентов ([Rule B-1](https://vuejs.org/style-guide/rules-strongly-recommended.html#single-file-component-filename-casing)):**
@@ -121,16 +200,14 @@
   Категорически запрещено использовать `export default defineComponent({ data() ... })`. Только
   `<script setup lang="ts">`.
 
-### 3.3. Приоритет C: Рекомендуемый порядок секций и элементов
+### 4.3. Приоритет C: Рекомендуемый порядок секций и элементов
 
 #### Порядок блоков верхнего уровня в SFC:
-
 1. `<script setup lang="ts">`
 2. `<template>`
 3. `<style scoped>` (если требуется)
 
 #### Порядок кода внутри `<script setup>`:
-
 1. Импорт типов (`import type { ... } from '...'`)
 2. Импорт ядра Vue (`ref`, `computed`, `watch`, `onMounted`, etc.)
 3. Импорт сторонних библиотек (`@vueuse/core`, `primevue/*`, `vee-validate`, etc.)
@@ -145,11 +222,11 @@
 
 ---
 
-## 4. Дизайн-система и правила верстки (FSP Brandbook)
+## 5. Дизайн-система и правила верстки (FSP Brandbook)
 
 Проект строго следует брендбуку Федерации спортивного программирования России:
 
-### 4.1. Цветовая палитра (CSS переменные и классы Tailwind)
+### 5.1. Цветовая палитра (CSS переменные и классы Tailwind)
 
 - **Primary Blue (`#402FFF`):** Классы `bg-fsp-blue`, `text-fsp-blue`, `border-fsp-blue`. Основной акцентный цвет:
   кнопки действия, активные фильтры, фокусы.
@@ -162,56 +239,55 @@
 - **Secondary Gray (`#C8C9CA` / `#8C8F96`):** Классы `text-fsp-gray`, `border-fsp-gray`. Разделители, границы,
   вспомогательный текст.
 
-### 4.2. Типографика
+### 5.2. Типографика
 
 - **Моноширинный шрифт:** `'JetBrains Mono', monospace` (класс `font-mono`) — обязателен для кода, тегов технологий,
   грейдов (`Junior / Middle / Senior`), рейтингов, очков скоринга и бейджей соревнований.
 - **Интерфейсный шрифт:** `'Inter', system-ui, sans-serif` (класс `font-sans`) — основной шрифт для текста, форм, резюме
   и описаний вакансий.
 
-### 4.3. Адаптивность и темы оформления
-
+### 5.3. Адаптивность и темы оформления
 - Поддержка переключения темной и светлой тем через селектор `.dark` (настроен в Tailwind v4).
 - Адаптивный дизайн (Mobile First / Desktop Responsive): `sm:`, `md:`, `lg:`, `xl:`.
 
 ---
 
-## 5. Архитектурная структура каталогов `frontend/src`
+## 6. Архитектурная структура каталогов `frontend/src`
 
 ```
 frontend/src/
-├── api/                  # Транспортный слой API
+├── api/                  # Общий транспортный слой API и клиенты
 │   ├── client.ts         # Экземпляр Axios с интерцепторами токенов и ошибок
-│   ├── endpoints/        # Модульные функции API (auth.ts, candidates.ts, vacancies.ts, tests.ts, fsp.ts)
-│   └── mocks/            # Локальные мок-данные (fallback при недоступности бэкенда)
+│   ├── endpoints/        # Эндпоинты по доменам (auth, candidates, vacancies, tests, fsp)
+│   └── mocks/            # Локальные фикстуры и генераторы моков (OpenAPI fallback)
 ├── assets/               # Глобальные стили (main.css), шрифты, изображения
-├── components/           # Vue-компоненты
-│   ├── common/           # Переиспользуемые базовые UI-виджеты (BaseButton, BaseBadge, Modal, EmptyState, Loader)
-│   ├── candidate/        # Компоненты ЛК Кандидата (ProfileCard, TestRunner, SkillsSelector, GradeHistory)
-│   ├── employer/         # Компоненты ЛК Работодателя (CandidateFilter, CandidateRankedCard, VacancyForm, InviteDialog)
-│   ├── layout/           # Каркас страниц (AppHeader, AppSidebar, AppFooter, UserMenu)
-│   └── fsp/              # Компоненты верификации ФСП (FspBadge, AchievementCard, RatingProgress)
-├── composables/          # Бизнес-логика и переиспользуемые UI-сценарии
-│   ├── useAuth.ts        # Авторизация, смена роли, выход
-│   ├── useCandidates.ts  # Загрузка, фильтрация, ранжирование соискателей
-│   ├── useTesting.ts     # Прохождение теста на грейд, таймер, отправка ответов
-│   ├── useInvites.ts     # Механика офферов и приглашений со статусами
+├── components/           # UI-компоненты, сгруппированные по Vertical Slices
+│   ├── common/           # Shared UI (BaseButton, BaseBadge, Modal, EmptyState, Loader, Input)
+│   ├── candidate/        # Slice: Кандидат (ProfileCard, TestRunner, SkillsSelector, GradeHistory)
+│   ├── employer/         # Slice: Работодатель (CandidateFilter, CandidateRankedCard, VacancyForm, InviteDialog)
+│   ├── fsp/              # Slice: Верификация ФСП (FspBadge, AchievementCard, RatingProgress)
+│   └── layout/           # Каркас страниц (AppHeader, AppSidebar, AppFooter, UserMenu)
+├── composables/          # Composable-Driven логика (доменные и UI-сценарии)
+│   ├── useAuth.ts        # Авторизация, смена роли, сессия
+│   ├── useCandidates.ts  # Загрузка, фильтрация, скоринг и ранжирование
+│   ├── useTesting.ts     # Адаптивное тестирование, таймер, авто-проверка грейда
+│   ├── useInvites.ts     # Механика офферов, откликов и статусов взаимодействий
+│   ├── useFspProfile.ts  # Получение верифицированных достижений ФСП
 │   └── useTheme.ts       # Управление светлой/темной темой
-├── router/               # Настройка маршрутов (Vue Router), метаданные ролей и guards
-├── stores/               # Глобальные Pinia сторы (auth, candidateProfile, employerProfile, notifications)
+├── router/               # Конфигурация маршрутов, guards и метаданные ролей
+├── stores/               # Глобальные Pinia сторы (auth, session, notifications)
 ├── theme/                # Пресеты PrimeVue (fsp-preset.ts)
-├── types/                # TypeScript DTO, интерфейсы моделей и сущностей
-├── views/                # Страницы маршрутизатора (HomeView, LoginView, CandidateDashboard, EmployerDashboard, etc.)
+├── types/                # TypeScript DTO, интерфейсы моделей и Zod-схемы
+├── views/                # Страницы-оркестраторы (HomeView, LoginView, CandidateDashboard, EmployerDashboard, etc.)
 ├── App.vue               # Корневой компонент
 └── main.ts               # Точка входа, подключение плагинов
 ```
 
 ---
 
-## 6. Требования к состоянию интерфейса и надежности
+## 7. Требования к состоянию интерфейса и надежности
 
 Каждый компонент или композабл, работающий с асинхронными данными, **обязан явно обрабатывать 4 состояния**:
-
 1. **`idle`:** исходное состояние до инициализации.
 2. **`isLoading`:** состояние загрузки (отображение Skeleton / Loader / Spinner).
 3. **`error`:** ошибка выполнения (понятный текст для пользователя, кнопка «Повторить попытку»).
@@ -225,7 +301,7 @@ frontend/src/
 
 ---
 
-## 7. Поведенческие правила для ИИ при генерации кода
+## 8. Поведенческие правила для ИИ при генерации кода
 
 1. **Никаких пропусков кода (No Code Placeholders):**
     - **СТРОГО ЗАПРЕЩЕНО** писать `// ... остальной код без изменений ...`, `<!-- existing template -->`,
