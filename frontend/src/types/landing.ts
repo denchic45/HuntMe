@@ -1,4 +1,8 @@
-export type UserRole = 'candidate' | 'employer'
+import type { UserRole } from './auth'
+
+export type { UserRole }
+
+export type LandingRole = 'candidate' | 'employer'
 
 export interface StatMetric {
   value: string
@@ -72,4 +76,16 @@ export interface FaqItem {
   question: string
   answer: string
   role?: UserRole | 'all'
+}
+
+export interface RoadmapStep {
+  number: string
+  title: string
+  subtitle: string
+  description: string
+  badgeText: string
+  badgeVariant?: 'primary' | 'danger' | 'glow' | 'neutral'
+  icon: string
+  highlight?: string
+  tags?: string[]
 }

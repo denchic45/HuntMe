@@ -7,8 +7,8 @@
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-    --color-fsp-blue: #402FFF;
-    --color-fsp-blue-hover: #3222e0;
+    --color-fsp-blue: var(--fsp-blue);
+    --color-fsp-blue-hover: var(--fsp-blue-hover);
     --color-fsp-blue-light: #eef0ff;
 
     --color-fsp-red: #EC1D35;
@@ -30,8 +30,8 @@
     --font-family-base: 'Inter', system-ui, sans-serif;
     --font-family-mono: 'JetBrains Mono', monospace;
 
-    --fsp-blue: #402FFF;
-    --fsp-blue-hover: #3222e0;
+    --fsp-blue: #3855E4;
+    --fsp-blue-hover: #2E46CE;
     --fsp-red: #EC1D35;
     --fsp-red-hover: #d4142a;
     --fsp-dark: #1B1C21;
@@ -51,6 +51,8 @@ html {
 html.dark {
     background-color: #1B1C21;
     color: #EDEDED;
+    --fsp-blue: #5E75F5;
+    --fsp-blue-hover: #7589FA;
 }
 
 body {
@@ -65,3 +67,12 @@ body {
 .font-mono {
     font-family: var(--font-family-mono);
 }
+
+/* Скрытие системного баннера лицензии PrimeUI в процессе разработки */
+#p-license-host {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+

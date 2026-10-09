@@ -6,14 +6,6 @@ import BaseBadge from '@/components/common/BaseBadge.vue'
 
 const roleStore = useLandingRoleStore()
 
-const heroTags = [
-  { label: 'Senior Go Developer', icon: 'pi pi-bolt', variant: 'glow' as const },
-  { label: '🏆 Победитель Хакатона ФСП', icon: 'pi pi-verified', variant: 'danger' as const },
-  { label: 'Vue 3 & TypeScript', icon: 'pi pi-code', variant: 'primary' as const },
-  { label: '280 000 – 350 000 ₽', icon: 'pi pi-wallet', variant: 'neutral' as const },
-  { label: 'AI & Data Science', icon: 'pi pi-chart-line', variant: 'outline' as const },
-]
-
 const heroTitle = computed(() => {
   return roleStore.isCandidate
     ? {
@@ -27,6 +19,12 @@ const heroTitle = computed(() => {
         desc: 'Доступ к банку подтвержденных специалистов. Никаких сотен резюме-спама: кандидаты категоризированы объективными тестами и результатами ФСП.',
       }
 })
+const scrollToHowItWorks = () => {
+  const el = document.getElementById('how-it-works')
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
 </script>
 
 <template>
@@ -67,21 +65,9 @@ const heroTitle = computed(() => {
             {{ heroTitle.desc }}
           </p>
 
-          <!-- Интерактивные теги / скиллы -->
-          <div class="flex flex-wrap gap-2 justify-center lg:justify-start pt-2">
-            <BaseBadge
-              v-for="tag in heroTags"
-              :key="tag.label"
-              :icon="tag.icon"
-              :label="tag.label"
-              :variant="tag.variant"
-              size="md"
-            />
-          </div>
-
           <!-- Кнопки действий -->
           <div
-            class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4"
+            class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
           >
             <BaseButton v-if="roleStore.isCandidate" icon="pi pi-bolt" size="lg" variant="glow">
               Подтвердить свой грейд
@@ -91,7 +77,13 @@ const heroTitle = computed(() => {
               Открыть банк кандидатов
             </BaseButton>
 
-            <BaseButton icon="pi pi-arrow-right" icon-pos="right" size="lg" variant="outline">
+            <BaseButton
+              icon="pi pi-arrow-right"
+              icon-pos="right"
+              size="lg"
+              variant="outline"
+              @click="scrollToHowItWorks"
+            >
               Как работает подбор
             </BaseButton>
           </div>
