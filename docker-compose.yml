@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - database-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
@@ -27,6 +29,19 @@ services:
           condition: service_healthy	  
         keycloak:
           condition: service_healthy
+  
+  migrations:
+    build:
+      context: ./migrations
+      dockerfile: Dockerfile
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: ${CONNECTION_STRING_DB}
+      GOOSE_MIGRATION_DIR: /migrations
+    depends_on:
+      database:
+        condition: service_healthy
+
   
   keycloak-db:
     image: postgres:16-alpine
@@ -82,3 +97,4 @@ services:
   
 volumes:
   keycloak-db-data:
+  database-data:
