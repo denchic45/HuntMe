@@ -80,13 +80,13 @@ const items = computed<ComparisonItem[]>(() => {
         <div
           class="grid grid-cols-1 md:grid-cols-12 border-b border-gray-200 dark:border-fsp-dark-border bg-gray-50 dark:bg-fsp-dark text-xs font-mono font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400"
         >
-          <div class="md:col-span-4 p-4 hidden md:block">Параметр</div>
+          <div class="md:col-span-3 p-4 hidden md:block">Параметр</div>
           <div class="md:col-span-4 p-4 text-red-500 dark:text-red-400 flex items-center gap-1.5">
             <i class="pi pi-times-circle"></i>
             <span>Традиционные площадки</span>
           </div>
           <div
-            class="md:col-span-4 p-4 text-fsp-blue dark:text-blue-300 bg-fsp-blue/5 dark:bg-fsp-blue/10 flex items-center gap-1.5"
+            class="md:col-span-5 p-4 text-fsp-blue dark:text-blue-300 bg-fsp-blue/5 dark:bg-fsp-blue/10 flex items-center gap-1.5"
           >
             <i class="pi pi-check-circle"></i>
             <span>Платформа HuntMe</span>
@@ -99,7 +99,7 @@ const items = computed<ComparisonItem[]>(() => {
           class="grid grid-cols-1 md:grid-cols-12 border-b last:border-b-0 border-gray-100 dark:border-fsp-dark-border text-xs sm:text-sm font-sans"
         >
           <div
-            class="md:col-span-4 p-4 font-semibold text-gray-900 dark:text-gray-100 bg-gray-50/50 dark:bg-transparent"
+            class="md:col-span-3 p-4 font-semibold text-gray-900 dark:text-gray-100 bg-gray-50/50 dark:bg-transparent"
           >
             {{ item.feature }}
           </div>
@@ -108,7 +108,7 @@ const items = computed<ComparisonItem[]>(() => {
             <span>{{ item.traditional }}</span>
           </div>
           <div
-            class="md:col-span-4 p-4 font-medium text-gray-900 dark:text-white bg-fsp-blue/5 dark:bg-fsp-blue/10 flex items-start gap-2"
+            class="md:col-span-5 p-4 font-medium text-gray-900 dark:text-white bg-fsp-blue/5 dark:bg-fsp-blue/10 flex items-start gap-2"
           >
             <span class="text-fsp-blue font-bold">✓</span>
             <span>{{ item.huntMe }}</span>

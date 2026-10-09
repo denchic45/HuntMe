@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 interface Props {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glow'
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glow' | 'tonal'
   size?: 'sm' | 'md' | 'lg'
   icon?: string
   iconPos?: 'left' | 'right'
@@ -35,6 +35,8 @@ const variantClasses = computed(() => {
       return 'border border-gray-300 dark:border-fsp-dark-border text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-fsp-dark-surface'
     case 'glow':
       return 'bg-white text-fsp-dark hover:bg-gray-100 shadow-[0_0_20px_rgba(255,255,255,0.4)] font-bold'
+    case 'tonal':
+      return 'bg-fsp-blue/10 dark:bg-fsp-blue/20 text-fsp-blue dark:text-blue-300 hover:bg-fsp-blue/15 dark:hover:bg-fsp-blue/30 active:bg-fsp-blue/25 dark:active:bg-fsp-blue/35 font-semibold'
     case 'ghost':
     default:
       return 'text-gray-600 dark:text-gray-300 hover:text-fsp-blue dark:hover:text-white hover:bg-transparent'

@@ -113,8 +113,6 @@ const roleStore = useLandingRoleStore()
         </div>
         <div class="flex items-center gap-4">
           <span>Москва, Россия</span>
-          <span>•</span>
-          <span>Версия 1.0.0</span>
         </div>
       </div>
     </div>

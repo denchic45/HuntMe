@@ -13,4 +13,35 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    port: 5173,
+    proxy: {
+      // 1. Прокси на Go REST API
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      },
+      // 2. Прокси на Keycloak (OIDC Discovery, токены, JWKS)
+      '/realms': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:8080',
+        },
+      },
+      // 3. Прокси на Keycloak Admin REST API
+      '/admin': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:8080',
+        },
+      },
+      // 4. Прокси на статические ресурсы Keycloak
+      '/resources': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+  },
 })

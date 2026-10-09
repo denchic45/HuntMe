@@ -1,72 +1,8 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { useLandingRoleStore } from '@/stores/landingRole'
+import { useFaq } from '@/composables/useFaq'
 import BaseBadge from '@/components/common/BaseBadge.vue'
-import type { FaqItem } from '@/types/landing'
 
-const roleStore = useLandingRoleStore()
-
-const activeFaqId = ref<string | null>('1')
-
-const faqList = computed<FaqItem[]>(() => {
-  return roleStore.isCandidate
-    ? [
-        {
-          id: '1',
-          question: 'Что делать, если у меня нет опыта или достижений в ФСП?',
-          answer:
-            'Платформа доступна каждому разработчику. При регистрации вы проходите объективный адаптивный тест, который определяет ваш подтвержденный грейд. Достижения ФСП дают дополнительный бонус при ранжировании, но не являются обязательным условием для получения офферов.',
-        },
-        {
-          id: '2',
-          question: 'Как обеспечивается конфиденциальность перед текущим работодателем?',
-          answer:
-            'Ваш профиль в общем банке соискателей строго анонимизирован: скрыты ФИО, контакты, ссылки на соцсети. Прямые контактные данные передаются компании только после того, как вы лично приняли конкретное входящее предложение.',
-        },
-        {
-          id: '3',
-          question: 'Как часто можно пересдавать тест для повышения грейда?',
-          answer:
-            'По регламенту платформы повторное прохождение теста для подтверждения более высокого грейда доступно один раз в 3 месяца. При этом грейд никогда не понижается принудительно.',
-        },
-        {
-          id: '4',
-          question: 'Обязана ли компания указывать точную зарплату?',
-          answer:
-            'Да. По правилам HuntMe ни одно приглашение не может быть отправлено кандидату без явного указания вилки заработной платы в рублях («от» и «до»).',
-        },
-      ]
-    : [
-        {
-          id: '1',
-          question: 'Как формируются категории кандидатов?',
-          answer:
-            'Категория — это объективная связка подтвержденной специализации и грейда (например, «Middle Backend Go»). Она присваивается на основе результатов специализированного тестирования и верифицированных олимпиадных достижений.',
-        },
-        {
-          id: '2',
-          question: 'Как работает умный поиск кандидатов (Match AI)?',
-          answer:
-            'Вы описываете задачи проекта, стек и требования к уровню. Алгоритм ранжирует пул кандидатов и формирует текстовое объяснение соответствия (Explainable Match), экономя часы работы технического интервьюера.',
-        },
-        {
-          id: '3',
-          question: 'Когда компания получает прямые контакты соискателя?',
-          answer:
-            'Вы направляете адресное приглашение кандидату с описанием проекта и зарплатной вилкой. Как только соискатель нажимает «Принять предложение», вам мгновенно открываются его полные контакты для связи.',
-        },
-        {
-          id: '4',
-          question: 'Каковы гарантии квалификации специалистов?',
-          answer:
-            'Каждый специалист проходит входное тестирование алгоритмических и прикладных навыков. Участники с бейджем ФСП имеют подтвержденные результаты на всероссийских хакатонах и чемпионатах.',
-        },
-      ]
-})
-
-const toggleFaq = (id: string) => {
-  activeFaqId.value = activeFaqId.value === id ? null : id
-}
+const { faqList, activeFaqId, toggleFaq } = useFaq('1')
 </script>
 
 <template>
@@ -86,25 +22,74 @@ const toggleFaq = (id: string) => {
         <div
           v-for="item in faqList"
           :key="item.id"
-          class="rounded-2xl border border-gray-200 dark:border-fsp-dark-border bg-gray-50/50 dark:bg-fsp-dark-surface overflow-hidden transition-all"
+          :class="[
+            activeFaqId === item.id
+              ? 'border-fsp-blue/50 dark:border-fsp-blue/60 bg-white dark:bg-fsp-dark-surface shadow-md'
+              : 'border-gray-200 dark:border-fsp-dark-border bg-gray-50/50 dark:bg-fsp-dark-surface/60 hover:border-gray-300 dark:hover:border-gray-600',
+          ]"
+          class="rounded-2xl border transition-all duration-300 overflow-hidden"
         >
+          <!-- Кнопка вопроса -->
           <button
-            class="w-full p-5 sm:p-6 text-left font-bold font-sans text-sm sm:text-base flex items-center justify-between gap-4 cursor-pointer select-none"
+            :aria-controls="`faq-answer-${item.id}`"
+            :aria-expanded="activeFaqId === item.id"
+            class="w-full p-5 sm:p-6 text-left font-bold font-sans text-sm sm:text-base flex items-center justify-between gap-4 cursor-pointer select-none transition-colors"
             type="button"
             @click="toggleFaq(item.id)"
           >
-            <span class="text-gray-900 dark:text-white">{{ item.question }}</span>
-            <i
-              :class="{ 'rotate-180': activeFaqId === item.id }"
-              class="pi pi-chevron-down text-fsp-blue transition-transform duration-200 text-xs"
-            ></i>
+            <span
+              :class="
+                activeFaqId === item.id
+                  ? 'text-fsp-blue dark:text-blue-300'
+                  : 'text-gray-900 dark:text-white'
+              "
+              class="transition-colors duration-200"
+            >
+              {{ item.question }}
+            </span>
+            <div
+              :class="
+                activeFaqId === item.id
+                  ? 'bg-fsp-blue/15 text-fsp-blue'
+                  : 'bg-gray-200/60 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+              "
+              class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 select-none"
+            >
+              <svg
+                :class="{ 'rotate-180': activeFaqId === item.id }"
+                class="w-4 h-4 transition-transform duration-300 transform"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
           </button>
 
+          <!-- Анимированная плашка с ответом и появлением текста -->
           <div
-            v-if="activeFaqId === item.id"
-            class="px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-sans leading-relaxed border-t border-gray-100 dark:border-fsp-dark-border/60 pt-4"
+            :id="`faq-answer-${item.id}`"
+            :class="
+              activeFaqId === item.id
+                ? 'grid-rows-[1fr] opacity-100'
+                : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+            "
+            class="grid transition-all duration-300 ease-in-out"
           >
-            {{ item.answer }}
+            <div class="overflow-hidden">
+              <div
+                :class="
+                  activeFaqId === item.id ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+                "
+                class="px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-sans leading-relaxed border-t border-gray-100 dark:border-fsp-dark-border/60 pt-4 transition-all duration-300 transform"
+              >
+                {{ item.answer }}
+              </div>
+            </div>
           </div>
         </div>
       </div>

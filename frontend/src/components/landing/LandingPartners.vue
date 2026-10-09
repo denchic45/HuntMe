@@ -1,87 +1,103 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useLandingRoleStore } from '@/stores/landingRole'
 import type { StatMetric } from '@/types/landing'
 
 const roleStore = useLandingRoleStore()
+const activeIndex = ref(0)
 
 const metrics = computed<StatMetric[]>(() => {
   return roleStore.isCandidate
     ? [
-        { value: '15 000+', label: 'Верифицированных соискателей', subtext: 'в едином банке' },
-        { value: '100%', label: 'Прозрачность зарплат', subtext: 'вилка ЗП обязательна' },
-        { value: '48 часов', label: 'До первого оффера', subtext: 'средняя скорость' },
-        { value: '152-ФЗ', label: '100% приватность', subtext: 'контакты защищены' },
+        {
+          value: '15 мин',
+          label: 'Тест на грейд',
+          subtext: 'Адаптивная экспресс-оценка навыков вместо недель собеседований',
+        },
+        {
+          value: '48 часов',
+          label: 'До первого оффера',
+          subtext: 'Средняя скорость получения прямых предложений с вилкой ЗП',
+        },
+        {
+          value: '100%',
+          label: 'Открытые зарплаты',
+          subtext: 'Обязательное указание прозрачной зарплатной вилки в рублях',
+        },
+        {
+          value: '15 000+',
+          label: 'Банк талантов',
+          subtext: 'Соискатели с объективным тестированием и рейтингом ФСП',
+        },
       ]
     : [
-        { value: '70%', label: 'Экономия времени тимлидов', subtext: 'на первичном отсеве' },
-        { value: '94%', label: 'Точность подтверждения грейда', subtext: 'по результатам тестов' },
-        { value: '3.5x', label: 'Выше Response Rate', subtext: 'по сравнению со спамом' },
-        { value: 'FSP ID', label: 'Спортивный скоринг', subtext: 'рейтинг алгоритмистов' },
+        {
+          value: '70%',
+          label: 'Экономия времени',
+          subtext: 'Исключение спам-резюме и первичного отсева тимлидами',
+        },
+        {
+          value: '94%',
+          label: 'Точность грейда',
+          subtext: 'Объективное подтверждение адаптивными тестами и ФСП ID',
+        },
+        {
+          value: '3.5x',
+          label: 'Response Rate',
+          subtext: 'Прямые офферы с открытой ЗП получают максимальный отклик',
+        },
+        {
+          value: '152-ФЗ',
+          label: '100% Приватность',
+          subtext: 'Безопасность данных и прямой контакт только при согласии',
+        },
       ]
 })
-
-const partners = [
-  { name: 'ФСП России', role: 'Федерация спортивного программирования' },
-  { name: 'ЛЦТ', role: 'Лидеры цифровой трансформации' },
-  { name: 'Бизнес Москвы', role: 'Правительство Москвы' },
-  { name: 'Яндекс', role: 'Технологический партнер' },
-  { name: 'Сбер', role: 'ИТ-Инфраструктура' },
-  { name: 'Т-Банк', role: 'Финтех-экосистема' },
-]
 </script>
 
 <template>
-  <section
-    class="border-y border-gray-200/80 dark:border-fsp-dark-border bg-gray-50/50 dark:bg-fsp-dark/40 py-12"
-  >
+  <section class="relative z-20 pb-12 md:pb-16 -mt-6 md:-mt-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Метрики в моноширинном стиле -->
+      <!-- Плавающая карточка с метриками в стиле референса -->
       <div
-        class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center border-b border-gray-200 dark:border-fsp-dark-border pb-10"
+        class="rounded-3xl p-3 sm:p-4 bg-white/80 dark:bg-fsp-dark/90 border border-gray-200/80 dark:border-fsp-dark-border shadow-2xl backdrop-blur-xl transition-all"
       >
-        <div v-for="metric in metrics" :key="metric.label" class="space-y-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div
-            class="text-3xl sm:text-4xl font-extrabold font-mono text-gray-900 dark:text-white tracking-tight"
+            v-for="(metric, index) in metrics"
+            :key="metric.label"
+            :class="[
+              index === activeIndex
+                ? 'bg-fsp-blue text-white shadow-[0_8px_30px_rgba(64,47,255,0.35)] ring-1 ring-white/20'
+                : 'hover:bg-gray-100/70 dark:hover:bg-fsp-dark-surface/60 text-gray-900 dark:text-white',
+            ]"
+            class="rounded-2xl p-6 sm:p-7 text-left transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4"
+            @mouseenter="activeIndex = index"
           >
-            {{ metric.value }}
-          </div>
-          <div class="text-xs sm:text-sm font-semibold text-fsp-blue dark:text-blue-400 font-sans">
-            {{ metric.label }}
-          </div>
-          <div class="text-[11px] text-gray-500 dark:text-gray-400 font-sans">
-            {{ metric.subtext }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Логотипы партнеров и организаторов -->
-      <div class="pt-8">
-        <div
-          class="text-center text-xs uppercase tracking-widest text-gray-400 dark:text-gray-500 font-mono mb-6"
-        >
-          При поддержке и партнерстве ключевых ИТ-институтов
-        </div>
-        <div
-          class="flex flex-wrap items-center justify-center gap-8 md:gap-12 opacity-80 dark:opacity-90"
-        >
-          <div
-            v-for="partner in partners"
-            :key="partner.name"
-            class="flex items-center gap-2 group transition-all"
-          >
+            <!-- Числовая метрика -->
             <div
-              class="w-2.5 h-2.5 rounded-full bg-fsp-blue/60 group-hover:bg-fsp-red transition-colors"
-            ></div>
-            <div class="flex flex-col">
-              <span
-                class="text-sm md:text-base font-bold font-mono text-gray-800 dark:text-gray-200 group-hover:text-fsp-blue transition-colors"
+              :class="index === activeIndex ? 'text-white' : 'text-gray-900 dark:text-white'"
+              class="text-4xl sm:text-5xl font-extrabold font-mono tracking-tight"
+            >
+              {{ metric.value }}
+            </div>
+
+            <!-- Текстовое описание -->
+            <div>
+              <div
+                :class="index === activeIndex ? 'text-white' : 'text-gray-900 dark:text-white'"
+                class="text-base sm:text-lg font-bold font-sans leading-snug"
               >
-                {{ partner.name }}
-              </span>
-              <span class="text-[10px] text-gray-500 dark:text-gray-400 hidden sm:block">
-                {{ partner.role }}
-              </span>
+                {{ metric.label }}
+              </div>
+              <div
+                :class="
+                  index === activeIndex ? 'text-blue-100/90' : 'text-gray-600 dark:text-gray-300'
+                "
+                class="text-xs sm:text-sm font-sans leading-relaxed mt-1.5"
+              >
+                {{ metric.subtext }}
+              </div>
             </div>
           </div>
         </div>

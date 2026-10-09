@@ -1,15 +1,25 @@
 <script lang="ts" setup>
-import { useDark, useToggle } from '@vueuse/core'
+import { useRouter } from 'vue-router'
+import { useTheme } from '@/composables/useTheme'
+import { useAuth } from '@/composables/useAuth'
 import BaseButton from '@/components/common/BaseButton.vue'
 import LandingRoleToggle from '@/components/landing/LandingRoleToggle.vue'
 
-const isDark = useDark({
-  selector: 'html',
-  attribute: 'class',
-  valueDark: 'dark',
-  valueLight: '',
-})
-const toggleDark = useToggle(isDark)
+const router = useRouter()
+const { isDark, toggleDark } = useTheme()
+const { isAuthenticated, role } = useAuth()
+
+function handleCabinetClick() {
+  if (isAuthenticated.value) {
+    if (role.value === 'employer') {
+      router.push('/employer/dashboard')
+    } else {
+      router.push('/candidate/overview')
+    }
+  } else {
+    router.push('/login')
+  }
+}
 </script>
 
 <template>
@@ -18,7 +28,7 @@ const toggleDark = useToggle(isDark)
   >
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
       <!-- Логотип бренда -->
-      <a class="flex items-center gap-2 select-none group shrink-0" href="#">
+      <RouterLink class="flex items-center gap-2 select-none group shrink-0" to="/">
         <img
           alt="ФСП"
           class="h-8 w-auto transition-transform group-hover:scale-105"
@@ -32,12 +42,13 @@ const toggleDark = useToggle(isDark)
           </span>
           <span
             class="text-[9px] sm:text-[10px] text-gray-400 font-mono tracking-wider -mt-1 hidden xs:block"
-            >ФСП РЕКРУТИНГ</span
           >
+            ФСП РЕКРУТИНГ
+          </span>
         </div>
-      </a>
+      </RouterLink>
 
-      <!-- Единственный ролевой переключатель в шапке -->
+      <!-- Ролевой переключатель лендинга -->
       <div class="flex items-center">
         <LandingRoleToggle size="sm" />
       </div>
@@ -57,9 +68,10 @@ const toggleDark = useToggle(isDark)
           ></i>
         </button>
 
-        <BaseButton class="hidden md:inline-flex" size="sm" variant="ghost"> Войти </BaseButton>
-
-        <BaseButton size="sm" variant="glow"> Начать </BaseButton>
+        <!-- Кнопка Личный кабинет -->
+        <BaseButton size="sm" variant="glow" @click="handleCabinetClick">
+          Личный кабинет
+        </BaseButton>
       </div>
     </div>
   </header>

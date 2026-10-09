@@ -103,3 +103,145 @@ stateDiagram-v2
 
 Файл [`api/openapi.yaml`](file:///home/denis/WebstormProjects/HuntMe/api/openapi.yaml) можно открыть через Swagger UI,
 Redoc или отвалидировать через OpenAPI CLI.
+
+---
+
+## 5. Развертывание экосистемы в Docker (Архитектура и руководство)
+
+Платформа **HuntMe** полностью контейнеризирована для развертывания на едином сервере (Single-Node Docker Deployment).
+
+### 5.1. Архитектурная схема взаимодействия
+
+Все контейнеры объединены в общую изолированную сеть Docker (`bridge network`) и обращаются друг к другу по именам
+сервисов. Внешний доступ в интернет предоставляется через единый шлюз **Nginx Gateway**:
+
+```mermaid
+flowchart TD
+    User(["Пользователь / Браузер"]) -->|HTTP:80 / HTTPS:443| Gateway["gateway (Nginx Reverse Proxy)"]
+
+    subgraph DockerBridge ["Изолированная внутренняя сеть Docker"]
+        Gateway -->|"http://frontend:80 (путь /)"| Frontend["frontend (HuntMe Vue 3 SPA)"]
+        Gateway -->|"http://backend:8081 (путь /api/*)"| Backend["backend (Go REST API)"]
+        Gateway -->|"http://keycloak:8080 (путь /realms/*, /admin/*)"| Keycloak["keycloak (Identity Provider OIDC)"]
+        
+        Backend -->|"postgres://database:5432"| DB[("database (PostgreSQL)")]
+        Keycloak -->|"jdbc:postgresql://keycloak-db:5432"| KCDB[("keycloak-db (PostgreSQL)")]
+        Migrations["migrations (Goose)"] -.->|Миграции при старте| DB
+        Backend -.->|"JWKS верификация токенов"| Keycloak
+    end
+```
+
+### 5.2. Распределение сервисов и портов
+
+| Сервис в Compose  | Контейнер                     | Назначение                                                | Внутренний порт | Внешний доступ (публичный)                        |
+|-------------------|-------------------------------|-----------------------------------------------------------|-----------------|---------------------------------------------------|
+| **`gateway`**     | `nginx:alpine`                | Reverse proxy, единая точка входа, SSL, маршрутизация     | `80`, `443`     | **`http://localhost:80`** (в прод: 80, 443)       |
+| **`frontend`**    | `Dockerfile` (Alpine + Nginx) | Собранное SPA-приложение Vue 3 (FSP Design System)        | `80`            | Доступен через шлюз на корневом пути `/`          |
+| **`backend`**     | `Dockerfile` (Go Alpine)      | Бизнес-логика, эндпоинты кандидатов, вакансий, откликов   | `8081`          | Доступен через шлюз на пути `/api/*`              |
+| **`migrations`**  | `Dockerfile` (Goose)          | Накатывание SQL-миграций в БД при старте                  | —               | Одноразовый запуск (Init container)               |
+| **`keycloak`**    | `keycloak:26.8.0`             | Сервер авторизации OIDC / Direct Access Grants            | `8080`          | Доступен через шлюз на `/realms/*`, `/admin/*`    |
+| **`database`**    | `postgres:16`                 | Основная реляционная БД платформы                         | `5432`          | Доступен только внутри сети Docker                |
+| **`keycloak-db`** | `postgres:16`                 | Отдельная БД для пользователей и сессий Keycloak          | `5432`          | Доступен только внутри сети Docker                |
+| **`mailpit`**     | `mailpit:v1.27.4`             | Локальный почтовый сервер для перехвата писем верификации | `8025`          | **`http://localhost:8025`** (веб-интерфейс писем) |
+
+---
+
+### 5.3. Пошаговое руководство по развертыванию (Deployment Guide)
+
+#### Шаг 1. Подготовка файла переменных окружения
+
+В корне проекта создайте файл `.env` на основе образца:
+
+```bash
+cp .env.example .env
+```
+
+Заполните переменные (пароли и параметры подключения):
+
+```env
+# Параметры основной базы данных
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_strong_db_password
+POSTGRES_DB=huntme
+
+# Строка подключения для бэкенда и Goose-миграций
+CONNECTION_STRING_DB=postgresql://postgres:your_strong_db_password@database:5432/huntme?sslmode=disable
+
+# Параметры Keycloak
+KEYCLOAK_DB_PASSWORD=your_strong_kc_password
+KEYCLOAK_ADMIN_USER=admin
+KEYCLOAK_ADMIN_PASSWORD=admin_secure_password
+```
+
+#### Шаг 2. Запуск контейнеров одной командой
+
+В корне проекта выполните:
+
+```bash
+docker compose up -d --build
+```
+
+Docker последовательно:
+
+1. Поднимет базы данных `database` и `keycloak-db` и дождется их healthcheck-готовности.
+2. Запустит сервис `migrations` (Goose накатит таблицы в базу `huntme`).
+3. Запустит `keycloak` и `backend`.
+4. Соберет production-билд фронтенда в контейнере `frontend`.
+5. Запустит входной шлюз `gateway`.
+
+#### Шаг 3. Проверка статуса сервисов
+
+Проверьте, что все контейнеры работают и имеют статус `healthy` или `running`:
+
+```bash
+docker compose ps
+```
+
+Просмотр логов любого сервиса в реальном времени:
+
+```bash
+# Логи бэкенда
+docker compose logs -f backend
+
+# Логи шлюза
+docker compose logs -f gateway
+
+# Логи Keycloak
+docker compose logs -f keycloak
+```
+
+#### Шаг 4. Первичная настройка Keycloak
+
+1. Откройте в браузере консоль администратора: **`http://localhost/admin/`** (или напрямую
+   `http://localhost:8080/admin/`).
+2. Авторизуйтесь под учетной записью из `.env` (`admin` / `admin_secure_password`).
+3. Создайте Realm с именем **`huntme`**.
+4. В разделе **Clients** создайте клиент для API:
+    - **Client ID**: `huntme-api`
+    - **Client authentication**: `Off` (публичный) или `On` (с секретом) в зависимости от настроек middleware.
+5. Для работы Direct Access Grants (авторизация через логин/пароль в форме HuntMe):
+    - В настройках клиента включите переключатель **Direct Access Grants**.
+
+#### Шаг 5. Работа с платформой в браузере
+
+После запуска система доступна по единому адресу:
+
+- **Интерфейс платформы HuntMe:** `http://localhost/`
+- **REST API бэкенда:** `http://localhost/api/v1/auth/me`
+- **Keycloak Realm OpenID Configuration:** `http://localhost/realms/huntme/.well-known/openid-configuration`
+- **Тестовый почтовый ящик (Mailpit):** `http://localhost:8025/`
+
+#### Шаг 6. Остановка и перезапуск
+
+- Остановка сервисов с сохранением данных:
+  ```bash
+  docker compose down
+  ```
+- Остановка с полной очисткой данных (включая volumes БД):
+  ```bash
+  docker compose down -v
+  ```
+- Пересборка после изменения исходного кода фронтенда или бэкенда:
+  ```bash
+  docker compose up -d --build frontend backend
+  ```

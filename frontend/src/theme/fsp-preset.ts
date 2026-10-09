@@ -5,7 +5,7 @@ import Aura from '@primeuix/themes/aura'
  * Фирменный пресет PrimeVue темы HuntMe на основе брендбука ФСП (Федерация спортивного программирования).
  *
  * Фирменные цвета ФСП:
- * - Primary Blue: #402FFF (акцентные действия, кнопки, фокусы)
+ * - Primary Blue: #3855E4 (акцентные действия, кнопки, фокусы)
  * - Accent Red:   #EC1D35 (достижения ФСП, алерты, бейджи)
  * - Dark Neutral: #1B1C21 / #24262c / #2c2e36 (поверхности, карточки темной темы)
  * - Light Neutral: #EDEDED / #FFFFFF (светлые поверхности)
@@ -21,19 +21,19 @@ export const FspPreset = definePreset(Aura, {
       lg: '12px',
       xl: '16px',
     },
-    // Фирменный синий ФСП (#402FFF)
+    // Фирменный синий ФСП (#3855E4)
     blue: {
-      50: '#eef0ff',
-      100: '#dce0ff',
-      200: '#bac2ff',
-      300: '#97a3ff',
-      400: '#6a77ff',
-      500: '#402FFF',
-      600: '#3222e0',
-      700: '#2618b8',
-      800: '#1d1290',
-      900: '#170e73',
-      950: '#0c0645',
+      50: '#eef2ff',
+      100: '#e0e5fe',
+      200: '#c6d0fd',
+      300: '#a3b3fb',
+      400: '#6f88f7',
+      500: '#3855E4',
+      600: '#2e46ce',
+      700: '#2537a7',
+      800: '#1e2c84',
+      900: '#182367',
+      950: '#0e143f',
     },
     // Фирменный красный ФСП (#EC1D35)
     red: {
@@ -77,6 +77,24 @@ export const FspPreset = definePreset(Aura, {
       800: '{blue.800}',
       900: '{blue.900}',
       950: '{blue.950}',
+    },
+    colorScheme: {
+      light: {
+        primary: {
+          color: '{blue.500}',
+          contrastColor: '#ffffff',
+          hoverColor: '{blue.600}',
+          activeColor: '{blue.700}',
+        },
+      },
+      dark: {
+        primary: {
+          color: '{blue.400}',
+          contrastColor: '#1B1C21',
+          hoverColor: '{blue.300}',
+          activeColor: '{blue.200}',
+        },
+      },
     },
   },
 })

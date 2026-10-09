@@ -18,6 +18,7 @@ pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 app.use(router)
 app.use(PrimeVue, {
+  license: import.meta.env.VITE_PRIMEVUE_LICENSE,
   theme: {
     preset: FspPreset,
     options: {
