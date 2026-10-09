@@ -23,4 +23,8 @@ func RegisterRoutes(
 		"GET /api/v1/candidate/profile",
 		requireAuth(http.HandlerFunc(h.getProfileHandler)),
 	)
+	mux.Handle(
+		"PATCH /api/v1/candidate/profile",
+		requireAuth(http.HandlerFunc(h.editProfileHandler)),
+	)
 }
