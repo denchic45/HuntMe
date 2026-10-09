@@ -30,7 +30,7 @@ func main() {
 	}
 
 	if dbPool.Ping(ctx) != nil {
-		log.Printf("no connection, reconnection")
+		log.Fatalf("no connection, reconnection")
 	}
 
 	jwks, err := keyfunc.NewDefaultCtx(ctx, []string{jwksURL})
@@ -42,12 +42,16 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	frontendOrigin := os.Getenv("CORS_ALLOWED_ORIGIN")
+
+	handler := middleware.CORS(frontendOrigin)(mux)
+
 	auth.RegisterRoutes(mux, requireAuth)
 	candidate.RegisterRoutes(mux, requireAuth, dbPool)
 
 	server := &http.Server{
 		Addr:              ":8081",
-		Handler:           mux,
+		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 

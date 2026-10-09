@@ -22,6 +22,7 @@ services:
       dockerfile: Dockerfile
     environment:
       CONNECTION_STRING_DB: ${CONNECTION_STRING_DB}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
     ports:
     - "8081:8081"
     depends_on:

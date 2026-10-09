@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type GetProfileResponse struct {
@@ -45,6 +46,11 @@ type EditProfileRequest struct {
 	SoftSkills      *[]string `json:"softSkills"`
 }
 
+type EditPrivacyRequest struct {
+	IsPublic           *bool `json:"isPublic"`
+	HideCurrentCompany *bool `json:"hideCurrentCompany"`
+}
+
 func (h *Handler) createProfileHandler(w http.ResponseWriter, r *http.Request) {
 	cont, ok := middleware.UserFromContext(r.Context())
 	if !ok {
@@ -60,6 +66,9 @@ func (h *Handler) createProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.FullName = strings.TrimSpace(req.FullName)
+	req.Email = strings.TrimSpace(req.Email)
+
 	if req.FullName == "" || req.Email == "" {
 		http.Error(w, "Full name and email are required", http.StatusBadRequest)
 		return
@@ -69,6 +78,13 @@ func (h *Handler) createProfileHandler(w http.ResponseWriter, r *http.Request) {
         INSERT INTO public.candidates (id, full_name, email)
         VALUES ($1, $2, $3)
     `, cont.Subject, req.FullName, req.Email)
+
+	var pgErr *pgconn.PgError
+
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		http.Error(w, "Profile already exists", http.StatusConflict)
+		return
+	}
 
 	if err != nil {
 		log.Printf("DB error: %v", err)
@@ -141,7 +157,6 @@ func (h *Handler) getProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(profile); err != nil {
 		log.Printf("/candidate/profile error: %v", err)
@@ -163,9 +178,13 @@ func (h *Handler) editProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.FullName != nil && strings.TrimSpace(*req.FullName) == "" {
-		http.Error(w, "Empty full name", http.StatusBadRequest)
-		return
+	if req.FullName != nil {
+		*req.FullName = strings.TrimSpace(*req.FullName)
+
+		if *req.FullName == "" {
+			http.Error(w, "Empty company name", http.StatusBadRequest)
+			return
+		}
 	}
 
 	tag, err := h.db.Exec(r.Context(), `
@@ -210,6 +229,47 @@ func (h *Handler) editProfileHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) editPrivacy(w http.ResponseWriter, r *http.Request) {
+	cont, ok := middleware.UserFromContext(r.Context())
+	if !ok {
+		w.Header().Set("WWW-Authenticate", "Bearer")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req EditPrivacyRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	tag, err := h.db.Exec(r.Context(), `
+    UPDATE public.candidates
+    SET
+    	is_public = COALESCE($2::text, is_public),
+        hide_current_company = COALESCE($3::text, hide_current_company)
+    WHERE id = $1
+`,
+		cont.Subject,
+		req.HideCurrentCompany,
+		req.IsPublic,
+	)
+
+	if err != nil {
+		log.Printf("DB error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if tag.RowsAffected() == 0 {
+		http.Error(w, "Profile not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func nullHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusAccepted)
+	http.Error(w, "Not implemented", http.StatusNotImplemented)
 }
