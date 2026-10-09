@@ -1,25 +1,26 @@
 package candidate
 
 import (
-	"HuntMeBackend/handlers/candidate/invitations"
-	"HuntMeBackend/handlers/candidate/profile"
-	"HuntMeBackend/handlers/candidate/testingMux"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewMux() *http.ServeMux {
-	mux := http.NewServeMux()
+type Handler struct {
+	db *pgxpool.Pool
+}
 
-	profileMux := profile.NewMux()
-	testingMux := testingMux.NewMux()
-	invitationsMux := invitations.NewMux()
-
-	mux.Handle("/profile", http.StripPrefix("/profile", profileMux))
-	mux.Handle("/testing", http.StripPrefix("/testing", testingMux))
-	mux.Handle("/invitations", http.StripPrefix("/invitations", invitationsMux))
-
-	mux.HandleFunc("/fsp", nullHandler)
-	mux.HandleFunc("/privacy", nullHandler)
-
-	return mux
+func RegisterRoutes(
+	mux *http.ServeMux,
+	requireAuth func(http.Handler) http.Handler,
+	pool *pgxpool.Pool) {
+	h := &Handler{db: pool}
+	mux.Handle(
+		"POST /api/v1/candidate/profile",
+		requireAuth(http.HandlerFunc(h.createProfileHandler)),
+	)
+	mux.Handle(
+		"GET /api/v1/candidate/profile",
+		requireAuth(http.HandlerFunc(h.getProfileHandler)),
+	)
 }

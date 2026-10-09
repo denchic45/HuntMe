@@ -8,7 +8,7 @@ import (
 	"HuntMeBackend/middleware"
 )
 
-type meResponse struct {
+type profileResponse struct {
 	ID string `json:"id"`
 	// Username      string `json:"username"`
 	// Email         string `json:"email"`
@@ -16,15 +16,15 @@ type meResponse struct {
 }
 
 func authMeHandler(w http.ResponseWriter, r *http.Request) {
-	cont, ok := middleware.UserFromContext(r.Context())
+	id, ok := middleware.UserFromContext(r.Context())
 	if !ok {
 		w.Header().Set("WWW-Authenticate", "Bearer")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	response := meResponse{
-		ID: cont.Subject,
+	response := profileResponse{
+		ID: id.Subject,
 		// Username:      cont.Username,
 		// Email:         cont.Email,
 		// EmailVerified: cont.EmailVerified,
@@ -35,7 +35,7 @@ func authMeHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("/auth/me response: %v", err)
+		log.Printf("/auth/me error: %v", err)
 	}
 }
 
