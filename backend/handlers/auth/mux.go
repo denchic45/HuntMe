@@ -6,7 +6,6 @@ func RegisterRoutes(
 	mux *http.ServeMux,
 	requireAuth func(http.Handler) http.Handler,
 ) {
-	mux.HandleFunc("POST /api/v1/auth/refresh", nullHandler)
 	mux.Handle(
 		"GET /api/v1/auth/me",
 		requireAuth(http.HandlerFunc(authMeHandler)),

@@ -28,4 +28,12 @@ func RegisterRoutes(
 		"PATCH /api/v1/employer/profile",
 		requireAuth(http.HandlerFunc(h.editProfileHandler)),
 	)
+	mux.Handle(
+		"PATCH /api/v1/employer/candidates/",
+		requireAuth(http.HandlerFunc(h.searchCandidatesHandler)),
+	)
+	mux.Handle(
+		"POST /api/v1/employer/candidates/match",
+		requireAuth(http.HandlerFunc(h.matchCandidatesHandler)),
+	)
 }

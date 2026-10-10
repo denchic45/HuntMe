@@ -2,7 +2,7 @@ FROM mirror.gcr.io/library/alpine:3.24 AS base
 WORKDIR /app
 EXPOSE 8080
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates poppler-utils
 
 FROM mirror.gcr.io/library/golang:1.26.8-alpine AS build
 WORKDIR /src

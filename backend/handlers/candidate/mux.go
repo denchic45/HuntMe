@@ -31,6 +31,11 @@ func RegisterRoutes(
 	)
 
 	mux.Handle(
+		"POST /api/v1/candidate/profile/resume",
+		requireAuth(http.HandlerFunc(h.resumeHandler)),
+	)
+
+	mux.Handle(
 		"POST /api/v1/candidate/fsp",
 		requireAuth(http.HandlerFunc(nullHandler)),
 	)

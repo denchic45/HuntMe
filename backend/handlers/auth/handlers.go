@@ -38,7 +38,3 @@ func authMeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("/auth/me error: %v", err)
 	}
 }
-
-func nullHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusCreated)
-}
