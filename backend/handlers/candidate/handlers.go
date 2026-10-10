@@ -182,7 +182,7 @@ func (h *Handler) editProfileHandler(w http.ResponseWriter, r *http.Request) {
 		*req.FullName = strings.TrimSpace(*req.FullName)
 
 		if *req.FullName == "" {
-			http.Error(w, "Empty company name", http.StatusBadRequest)
+			http.Error(w, "Empty full name", http.StatusBadRequest)
 			return
 		}
 	}

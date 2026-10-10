@@ -8,115 +8,237 @@ info:
   version: 1.0.0
   contact:
     name: HuntMe Team
-
 servers:
   - url: /api/v1
     description: Основной сервер API v1
-
 paths:
-  # ==========================================
-  # 1. АВТОРИЗАЦИЯ И ИДЕНТИФИКАЦИЯ (AUTH)
-  # ==========================================
-  
-  /auth/refresh:
-    post:
-      summary: Обновление access-токена
-      tags:
-        - Auth
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - refreshToken
-              properties:
-                refreshToken:
-                  type: string
-      responses:
-        '200':
-          description: Токен успешно обновлен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthTokens'
-        '401':
-          description: Невалидный или просроченный refresh-токен
-
-  /auth/me:
+  /api/v1/auth/me:
     get:
-      summary: Получение данных текущего сеанса
+      summary: Идентификатор текущего сеанса
+      operationId: getCurrentSession
       tags:
         - Auth
+      description: Возвращает только id=sub JWT. БД не вызывается.
+      x-implementation-status: implemented
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       responses:
         '200':
-          description: Данные авторизованного пользователя
+          description: Текущий сеанс.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/AuthMeResponse'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
         '401':
-          $ref: '#/components/responses/401Unauthorized'
-
-
-  # ==========================================
-  # 2. ЛИЧНЫЙ КАБИНЕТ СОИСКАТЕЛЯ (CANDIDATE)
-  # ==========================================
-  /candidate/profile:
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/candidate/profile:
     get:
-      summary: Получение профиля соискателя
+      summary: Профиль текущего кандидата
+      operationId: getCandidateProfile
       tags:
         - Candidate Profile
+      description: Профиль определяется только по sub JWT. Чужой id запрос
+        не принимает.
+      x-implementation-status: implemented
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       responses:
         '200':
-          description: Полные данные профиля соискателя
+          description: Профиль без обёртки.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CandidateProfile'
         '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '403':
-          $ref: '#/components/responses/403Forbidden'
-
-    put:
-      summary: Обновление профиля соискателя
-      description: Редактирование личных данных, опыта, навыков и желаемого уровня ЗП.
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ProfileNotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Создание профиля кандидата
+      operationId: createCandidateProfile
       tags:
         - Candidate Profile
+      description: Профиль определяется только по sub JWT.  Чужой id запрос
+        не принимает. Создаёт только id, full_name, email; остальные поля получают defaults БД.
+      x-implementation-status: implemented
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Только fullName и email после TrimSpace; id не возвращается.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCandidateProfileRequest'
+        '400':
+          description: Ошибка декодирования или обязательных полей.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                case1:
+                  value: |
+                    Invalid JSON
+                case2:
+                  value: |
+                    Full name and email are required
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/ProfileConflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCandidateProfileRequest'
+    patch:
+      summary: Изменение профиля кандидата
+      operationId: updateCandidateProfile
+      tags:
+        - Candidate Profile
+      description: Профиль определяется только по sub JWT. Чужой id запрос
+        не принимает.
+      x-implementation-status: implemented
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Обновлено; тела нет.
+        '400':
+          description: Ошибка JSON или пустой fullName.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                case1:
+                  value: |
+                    Invalid JSON
+                case2:
+                  value: |
+                    Empty company name
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ProfileNotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateCandidateProfileRequest'
+  /api/v1/candidate/profile/resume:
+    post:
+      summary: Извлечение текста из PDF
+      operationId: extractResumeText
+      tags:
+        - Candidate Profile
+      description: |-
+        Защищён JWT, но профиль в БД не требуется.
+        При отмене контекста клиента обработчик прекращает работу без формирования ошибки.
+      x-implementation-status: implemented
+      security:
+        - BearerAuth: []
       responses:
         '200':
-          description: Профиль успешно обновлен
+          description: Извлечённый текст.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CandidateProfile'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
+                $ref: '#/components/schemas/ResumeTextResponse'
         '401':
-          $ref: '#/components/responses/401Unauthorized'
-
-  /candidate/profile/resume:
-    post:
-      summary: Загрузка резюме в формате PDF (автораспознавание)
-      description: Распознает ФИО, контакты, стек, стаж и роли из загруженного PDF-файла.
-      tags:
-        - Candidate Profile
-      security:
-        - BearerAuth: [ ]
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Ошибка PDF-обработчика.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeError'
+              examples:
+                case1:
+                  value:
+                    error: Invalid multipart/form-data
+                case2:
+                  value:
+                    error: PDF field 'file' is required
+                case3:
+                  value:
+                    error: Upload exactly one PDF in field 'file'
+                case4:
+                  value:
+                    error: PDF is empty
+                case5:
+                  value:
+                    error: Expected a PDF file
+                case6:
+                  value:
+                    error: Cannot read PDF; it may be damaged or password-protected
+        '413':
+          description: Ошибка PDF-обработчика.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeError'
+              examples:
+                case1:
+                  value:
+                    error: Request is too large
+                case2:
+                  value:
+                    error: PDF must not exceed 10 MiB
+                case3:
+                  value:
+                    error: Extracted text must not exceed 2 MiB
+        '422':
+          description: Ошибка PDF-обработчика.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeError'
+              examples:
+                case1:
+                  value:
+                    error: No text found in PDF; a scanned document requires OCR
+        '500':
+          description: Ошибка PDF-обработчика.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeError'
+              examples:
+                case1:
+                  value:
+                    error: Cannot open uploaded file
+                case2:
+                  value:
+                    error: Cannot read uploaded file
+                case3:
+                  value:
+                    error: PDF processing failed
+        '503':
+          description: Ошибка PDF-обработчика.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeError'
+              examples:
+                case1:
+                  value:
+                    error: PDF processing exceeded the time limit
       requestBody:
         required: true
         content:
@@ -127,85 +249,120 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: Файл резюме PDF
-      responses:
-        '200':
-          description: Резюме распознано, профиль обогащен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CandidateProfile'
-        '400':
-          description: Неверный формат файла (ожидается PDF)
-
-  /candidate/fsp:
-    post:
-      summary: Привязка профиля ФСП (Федерация спортивного программирования)
-      description: Связывает профиль кандидата с ID участника ФСП и подтягивает подтвержденные достижения.
-      tags:
-        - Candidate Profile
-      security:
-        - BearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
+                  description: Один непустой PDF до 10 MiB.
               required:
-                - fspId
-              properties:
-                fspId:
-                  type: string
-                  example: "FSP-2026-8849"
+                - file
+  /api/v1/candidate/fsp:
+    post:
+      summary: '[Заглушка] Привязка ФСП'
+      operationId: linkFspProfile
+      tags:
+        - Candidate Profile
+      description: Маршрут подключён через RequireAuth. После проверки JWT всегда 501 text/plain; тело не читается,
+        роль и fspId не проверяются.
+      x-implementation-status: stub
+      security:
+        - BearerAuth: []
       responses:
-        '200':
-          description: ФСП ID успешно привязан и достижения подтверждены
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '501':
+          description: Подключённая заглушка.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                case1:
+                  value: |
+                    Not implemented
+      x-planned-contract:
+        requestBody:
+          required: true
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CandidateProfile'
-        '404':
-          description: Участник с таким FSP ID не найден
-
-  /candidate/privacy:
+                type: object
+                required:
+                  - fspId
+                properties:
+                  fspId:
+                    type: string
+                    example: FSP-2026-8849
+        responses:
+          '200':
+            description: 'ПЛАН: ФСП ID успешно привязан и достижения подтверждены'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PlannedCandidateProfile'
+          '404':
+            description: 'ПЛАН: Участник с таким FSP ID не найден'
+  /api/v1/candidate/privacy:
     patch:
-      summary: Настройки приватности и согласий
+      summary: '[Частично реализован] Настройки приватности'
+      operationId: updateCandidatePrivacy
       tags:
         - Candidate Profile
+      description: |-
+        Профиль определяется только по sub JWT. Чужой id запрос не принимает.
+      x-implementation-status: partial
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
+      responses:
+        '400':
+          description: Ошибка JSON.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                case1:
+                  value: |
+                    Invalid JSON
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                isPublic:
-                  type: boolean
-                  description: Участвовать ли в выдаче работодателям
-                privacyAgreement152:
-                  type: boolean
-                  description: Согласие на обработку персональных данных (152-ФЗ)
-                hideCurrentCompany:
-                  type: boolean
-                  description: Скрывать профиль от текущего работодателя
-      responses:
-        '200':
-          description: Настройки приватности обновлены
-
-  # ==========================================
-  # 3. ТЕСТИРОВАНИЕ И КАТЕГОРИЗАЦИЯ СОИСКАТЕЛЯ
-  # ==========================================
-  /candidate/testing/survey:
+              $ref: '#/components/schemas/UpdatePrivacyRequest'
+      x-unreachable-responses:
+        '204':
+          description: Ветка после успешного SQL, пустое тело; сейчас недостижима.
+        '404':
+          $ref: '#/components/responses/ProfileNotFound'
+      x-planned-contract:
+        description: Сохранённый прежний план, включая ещё не реализованное согласие privacyAgreement152. Не является
+          текущим поведением обработчика.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isPublic:
+                    type: boolean
+                    description: Участвовать ли в выдаче работодателям
+                  privacyAgreement152:
+                    type: boolean
+                    description: Согласие на обработку персональных данных (152-ФЗ)
+                  hideCurrentCompany:
+                    type: boolean
+                    description: Скрывать профиль от текущего работодателя
+  /api/v1/candidate/testing/survey:
     post:
-      summary: Сохранение результатов первичного опроса
-      description: Выбор специализации, сферы деятельности и заявленного грейда.
+      summary: '[Планируется] Сохранение результатов первичного опроса'
+      description: 'Планируемый контракт из репозитория. Операция не подключена: сейчас 404, а requestBody, security
+        и responses ниже описывают только план. Выбор специализации, сферы деятельности и заявленного грейда.'
       tags:
         - Candidate Testing
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -214,36 +371,57 @@ paths:
               $ref: '#/components/schemas/TestingSurveyRequest'
       responses:
         '200':
-          description: Опрос пройден, создан тест под заявленный грейд
+          description: 'ПЛАН: Опрос пройден, создан тест под заявленный грейд'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestingSession'
-
-  /candidate/testing/start:
+      operationId: submitTestingSurvey
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      x-unmounted-stub:
+        status: 202
+        body: empty
+        method-restriction: false
+        authenticated: false
+        x-implementation-status: stub
+  /api/v1/candidate/testing/start:
     post:
-      summary: Запуск сессии тестирования
-      description: Генерирует или возвращает уникальный набор заданий для подтверждения грейда.
+      summary: '[Планируется] Запуск сессии тестирования'
+      description: 'Планируемый контракт из репозитория. Операция не подключена: сейчас 404, а requestBody, security
+        и responses ниже описывают только план. Генерирует или возвращает уникальный набор заданий для подтверждения грейда.'
       tags:
         - Candidate Testing
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       responses:
         '200':
-          description: Задания тестирования успешно сформированы
+          description: 'ПЛАН: Задания тестирования успешно сформированы'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestingSession'
-
-  /candidate/testing/submit:
+      operationId: startTesting
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      x-unmounted-stub:
+        status: 202
+        body: empty
+        method-restriction: false
+        authenticated: false
+        x-implementation-status: stub
+  /api/v1/candidate/testing/submit:
     post:
-      summary: Отправка ответов на тест и присвоение категории
-      description: Рассчитывает балл, определяет подтвержденный грейд и присваивает итоговую категорию.
+      summary: '[Планируется] Отправка ответов на тест и присвоение категории'
+      description: 'Планируемый контракт из репозитория. Рассчитывает балл, определяет подтвержденный грейд и присваивает итоговую категорию.'
       tags:
         - Candidate Testing
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -252,115 +430,31 @@ paths:
               $ref: '#/components/schemas/TestSubmitRequest'
       responses:
         '200':
-          description: Тест пройден, категория обновлена
+          description: 'ПЛАН: Тест пройден, категория обновлена'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestResultResponse'
-
-  # ==========================================
-  # 4. ПОИСК СОИСКАТЕЛЕЙ И ПОДБОРКА (EMPLOYER)
-  # ==========================================
-  /employer/company:
+      operationId: submitTestingAnswers
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      x-unmounted-stub:
+        status: 202
+        body: empty
+        method-restriction: false
+        authenticated: false
+        x-implementation-status: stub
+  /api/v1/employer/candidates/{id}:
     get:
-      summary: Получение профиля компании
-      tags:
-        - Employer
-      security:
-        - BearerAuth: [ ]
-      responses:
-        '200':
-          description: Профиль компании успешно получен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EmployerProfile'
-
-    put:
-      summary: Обновление профиля компании
-      tags:
-        - Employer
-      security:
-        - BearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EmployerProfile'
-      responses:
-        '200':
-          description: Профиль успешно обновлен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EmployerProfile'
-
-  /employer/candidates:
-    get:
-      summary: Поиск соискателей в банке кандидатов
-      description: >
-        Доступ ко всей базе кандидатов с фильтрацией по категории, грейду,
-        стеку и наличию верифицированных достижений ФСП.
-        ВАЖНО: Контактные данные кандидатов в выдаче СКРЫТЫ.
+      summary: '[Планируется] Просмотр анонимизированной карточки кандидата'
+      description: |
+        Планируемый контракт из репозитория. Операция не подключена: сейчас 404, а requestBody, security и responses ниже описывают только план. Детальная информация о кандидате (стек, тесты, категория, история ФСП). Контактные данные (ФИО, email, телефон) скрыты, пока кандидат не примет приглашение.
       tags:
         - Employer Search
       security:
-        - BearerAuth: [ ]
-      parameters:
-        - name: specialization
-          in: query
-          description: Специализация (например, Backend, Frontend, DevOps)
-          schema:
-            type: string
-        - name: grade
-          in: query
-          description: Подтвержденный грейд (Junior, Middle, Senior, Lead)
-          schema:
-            type: string
-        - name: skills
-          in: query
-          description: Список ключевых навыков через запятую (например, Vue, TypeScript, Go)
-          schema:
-            type: string
-        - name: hasFspVerified
-          in: query
-          description: Фильтрует участников с подтвержденными достижениями ФСП
-          schema:
-            type: boolean
-        - name: salaryMax
-          in: query
-          description: Максимальный зарплатный бюджет (в рублях)
-          schema:
-            type: integer
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 10
-      responses:
-        '200':
-          description: Список анонимизированных карточек кандидатов
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CandidateSearchListResponse'
-
-  /employer/candidates/{id}:
-    get:
-      summary: Просмотр анонимизированной карточки кандидата
-      description: >
-        Детальная информация о кандидате (стек, тесты, категория, история ФСП).
-        Контактные данные (ФИО, email, телефон) скрыты, пока кандидат не примет приглашение.
-      tags:
-        - Employer Search
-      security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -369,51 +463,27 @@ paths:
             type: string
       responses:
         '200':
-          description: Карточка кандидата получена
+          description: 'ПЛАН: Карточка кандидата получена'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CandidateDetail'
         '404':
-          description: Кандидат не найден
-
-  /employer/candidates/match:
+          description: 'ПЛАН: Кандидат не найден'
+      operationId: getCandidateDetail
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+  /api/v1/employer/invitations:
     post:
-      summary: Умный подбор кандидатов под описание потребности
-      description: >
-        Работодатель описывает потребность (роль, стек, грейд, задачи),
-        алгоритм формирует ранжированную подборку с текстом объяснения (matchExplanation).
-      tags:
-        - Employer Search
-      security:
-        - BearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MatchRequirementRequest'
-      responses:
-        '200':
-          description: Ранжированная подборка кандидатов с обоснованием
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MatchResponse'
-
-  # ==========================================
-  # 5. ПРИГЛАШЕНИЯ И ВЫХОД НА КОНТАКТ (INVITATIONS)
-  # ==========================================
-  /employer/invitations:
-    post:
-      summary: Направление приглашения конкретному кандидату
-      description: >
-        Работодатель направляет приглашение соискателю с предложением.
-        ОБЯЗАТЕЛЬНО указывается уровень заработной платы (вилка от-до в рублях).
+      summary: '[Планируется] Направление приглашения конкретному кандидату'
+      description: |
+        Планируемый контракт из репозитория. Операция не подключена: сейчас 404, а requestBody, security и responses ниже описывают только план. По ТЗ 2.1–2.2: приглашение адресовано конкретному кандидату, содержит предложение, вилку зарплаты в рублях, компанию и способ связи; опубликованная вакансия не обязательна. Требуемые проверки ролей и владельца пока не реализованы. Работодатель создаёт от собственного имени и видит только свои отправленные приглашения и их статусы; id работодателя берётся из JWT. Статусы sent/viewed/accepted/rejected сохранены из прежней спецификации, механизм перехода в viewed ещё не определён. Дополнение contactMethod в required ответа — проектное уточнение, не подтверждённое кодом. Работодатель направляет приглашение соискателю с предложением. ОБЯЗАТЕЛЬНО указывается уровень заработной платы (вилка от-до в рублях).
       tags:
         - Invitations
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -422,55 +492,88 @@ paths:
               $ref: '#/components/schemas/CreateInvitationRequest'
       responses:
         '201':
-          description: Приглашение успешно отправлено кандидату
+          description: 'ПЛАН: Приглашение успешно отправлено кандидату'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Invitation'
-
+      operationId: employerInvitationsPost
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
     get:
-      summary: Список отправленных компанией приглашений
+      summary: '[Планируется] Список отправленных компанией приглашений'
       tags:
         - Invitations
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       responses:
         '200':
-          description: Список отправленных компанией приглашений успешно получен
+          description: 'ПЛАН: Список отправленных компанией приглашений успешно получен'
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Invitation'
-
-  /candidate/invitations:
+      operationId: employerInvitationsGet
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      description: 'Планируемый контракт из репозитория. Операция не подключена: сейчас 404, а requestBody, security
+        и responses ниже описывают только план. По ТЗ 2.1–2.2: приглашение адресовано конкретному кандидату, содержит
+        предложение, вилку зарплаты в рублях, компанию и способ связи; опубликованная вакансия не обязательна. Требуемые
+        проверки ролей и владельца пока не реализованы. Работодатель создаёт от собственного имени и видит только
+        свои отправленные приглашения и их статусы; id работодателя берётся из JWT. Статусы sent/viewed/accepted/rejected
+        сохранены из прежней спецификации, механизм перехода в viewed ещё не определён. Дополнение contactMethod
+        в required ответа — проектное уточнение, не подтверждённое кодом. '
+  /api/v1/candidate/invitations:
     get:
-      summary: Входящие приглашения соискателя от работодателей
+      summary: '[Планируется] Входящие приглашения соискателя от работодателей'
       tags:
         - Invitations
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       responses:
         '200':
-          description: Входящие приглашения успешно получены
+          description: 'ПЛАН: Входящие приглашения успешно получены'
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Invitation'
-
-  /candidate/invitations/{id}/accept:
+      operationId: listCandidateInvitations
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      x-unmounted-stub:
+        status: 202
+        body: empty
+        method-restriction: false
+        authenticated: false
+        x-implementation-status: stub
+      description: 'Планируемый контракт из репозитория. Операция не подключена: сейчас 404, а requestBody, security
+        и responses ниже описывают только план. Локальный NewMux не вызывается и не монтируется; его nullHandler
+        при отдельном вызове отвечает 202 без тела, без JWT и без ограничения метода. Это не текущий ответ полного
+        API-пути. По ТЗ 2.1–2.2: приглашение адресовано конкретному кандидату, содержит предложение, вилку зарплаты
+        в рублях, компанию и способ связи; опубликованная вакансия не обязательна. Требуемые проверки ролей и владельца
+        пока не реализованы. Кандидат видит и меняет только адресованные ему приглашения: candidateId должен совпадать
+        с sub JWT; чужие приглашения недоступны. Статусы sent/viewed/accepted/rejected сохранены из прежней спецификации,
+        механизм перехода в viewed ещё не определён. Дополнение contactMethod в required ответа — проектное уточнение,
+        не подтверждённое кодом. '
+  /api/v1/candidate/invitations/{id}/accept:
     post:
-      summary: Принятие приглашения соискателем
-      description: >
-        При принятии статус меняется на `accepted`, и контакты соискателя
-        раскрываются работодателю.
+      summary: '[Планируется] Принятие приглашения соискателем'
+      description: |
+        Планируемый контракт из репозитория. Операция не подключена: сейчас 404, а requestBody, security и responses ниже описывают только план. Локальный NewMux не вызывается и не монтируется; его nullHandler при отдельном вызове отвечает 202 без тела, без JWT и без ограничения метода. Это не текущий ответ полного API-пути. По ТЗ 2.1–2.2: приглашение адресовано конкретному кандидату, содержит предложение, вилку зарплаты в рублях, компанию и способ связи; опубликованная вакансия не обязательна. Требуемые проверки ролей и владельца пока не реализованы. Кандидат видит и меняет только адресованные ему приглашения: candidateId должен совпадать с sub JWT; чужие приглашения недоступны. Принятие раскрывает контакты только работодателю этого приглашения. Статусы sent/viewed/accepted/rejected сохранены из прежней спецификации, механизм перехода в viewed ещё не определён. Дополнение contactMethod в required ответа — проектное уточнение, не подтверждённое кодом. При принятии статус меняется на `accepted`, и контакты соискателя раскрываются работодателю.
       tags:
         - Invitations
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -479,19 +582,29 @@ paths:
             type: string
       responses:
         '200':
-          description: Приглашение принято, контакты переданы работодателю
+          description: 'ПЛАН: Приглашение принято, контакты переданы работодателю'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Invitation'
-
-  /candidate/invitations/{id}/reject:
+      operationId: acceptInvitation
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      x-unmounted-stub:
+        status: 202
+        body: empty
+        method-restriction: false
+        authenticated: false
+        x-implementation-status: stub
+  /api/v1/candidate/invitations/{id}/reject:
     post:
-      summary: Отклонение приглашения соискателем
+      summary: '[Планируется] Отклонение приглашения соискателем'
       tags:
         - Invitations
       security:
-        - BearerAuth: [ ]
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -500,301 +613,617 @@ paths:
             type: string
       responses:
         '200':
-          description: Приглашение отклонено
+          description: 'ПЛАН: Приглашение отклонено'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Invitation'
-
-# ==========================================
-# 6. СХЕМЫ ДАННЫХ (COMPONENTS & SCHEMAS)
-# ==========================================
+      operationId: rejectInvitation
+      x-implementation-status: planned
+      x-current-responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      x-unmounted-stub:
+        status: 202
+        body: empty
+        method-restriction: false
+        authenticated: false
+        x-implementation-status: stub
+      description: 'Планируемый контракт из репозитория. По ТЗ 2.1–2.2: приглашение адресовано конкретному кандидату, содержит предложение, вилку зарплаты
+        в рублях, компанию и способ связи; опубликованная вакансия не обязательна. Кандидат видит и меняет только адресованные ему приглашения: candidateId должен совпадать
+        с sub JWT; чужие приглашения недоступны. Отклонение не раскрывает контакты. Статусы sent/viewed/accepted/rejected
+        сохранены из прежней спецификации, механизм перехода в viewed ещё не определён. Дополнение contactMethod
+        в required ответа — проектное уточнение, не подтверждённое кодом. '
+  /api/v1/employer/profile:
+    get:
+      summary: '[Частично реализован] Профиль работодателя'
+      operationId: getEmployerProfile
+      tags:
+        - Employer
+      description: Ответы вынесены в x-handler-responses. Профиль определяется
+        только по sub JWT.   чужой id запрос не принимает.
+      x-implementation-status: partial
+      security: []
+      responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      x-handler-responses:
+        '200':
+          description: Профиль без обёртки.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ProfileNotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-handler-security:
+        - BearerAuth: []
+    post:
+      summary: '[Частично реализован] Создание профиля работодателя'
+      operationId: createEmployerProfile
+      tags:
+        - Employer
+      description: Ответы вынесены в x-handler-responses. Профиль определяется
+        только по sub JWT.   чужой id запрос не принимает.
+      x-implementation-status: partial
+      security: []
+      responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEmployerProfileRequest'
+      x-handler-responses:
+        '201':
+          description: Только companyName после TrimSpace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateEmployerProfileRequest'
+        '400':
+          description: Неверный запрос.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                case1:
+                  value: |
+                    Invalid JSON
+                case2:
+                  value: |
+                    Company name is required
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/ProfileConflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-handler-security:
+        - BearerAuth: []
+    patch:
+      summary: '[Частично реализован] Изменение профиля работодателя'
+      operationId: updateEmployerProfile
+      tags:
+        - Employer
+      description: Ответы вынесены в x-handler-responses. Профиль определяется
+        только по sub JWT.   чужой id запрос не принимает.
+      x-implementation-status: partial
+      security: []
+      responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmployerProfileRequest'
+      x-handler-responses:
+        '204':
+          description: Обновлено; тела нет.
+        '400':
+          description: Неверный запрос.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                case1:
+                  value: |
+                    Invalid JSON
+                case2:
+                  value: |
+                    Empty company name
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ProfileNotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-handler-security:
+        - BearerAuth: []
+  /api/v1/employer/candidates/:
+    patch:
+      summary: '[Частично реализован] Поиск по банку кандидатов'
+      operationId: searchCandidates
+      tags:
+        - Employer Search
+      description: |-
+        Это subtree pattern ServeMux: при подключении также обработает PATCH на вложенные пути,
+        а PATCH без завершающего / перенаправится на путь со слешем (301). Сейчас пакет не подключён.
+        После подключения требуется JWT, но роль и наличие профиля работодателя не проверяются.
+        Выборка только is_public=true, testing_status=verified, verified_grade/category IS NOT NULL;
+        пустая категория не отсекается. Фильтра category нет. specialization и grade — точное равенство;
+        skills — все указанные навыки (@>), с учётом регистра. salaryMax исключает NULL salary.
+        Сортировка has_fsp_verified DESC, id ASC, без сортировки по testScore; параметра sort нет.
+        Пагинация LIMIT/OFFSET; (page-1)*limit не должен превышать int64. testScore не выбирается.
+        Берётся первое значение каждого query-параметра и обрезается TrimSpace; неизвестные параметры игнорируются.
+      x-implementation-status: partial
+      security: []
+      responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      parameters:
+        - name: specialization
+          in: query
+          required: false
+          description: Пустое/пробельное значение означает отсутствие фильтра.
+          schema:
+            type: string
+        - name: grade
+          in: query
+          required: false
+          description: Пустое значение означает отсутствие фильтра; enum применяется после TrimSpace.
+          schema:
+            type: string
+            enum:
+              - ''
+              - Junior
+              - Middle
+              - Senior
+              - Lead
+        - name: skills
+          in: query
+          required: false
+          description: CSV через запятую; каждый элемент TrimSpace, пустые элементы запрещены. Пустая строка отключает
+            фильтр; повторы разрешены.
+          schema:
+            type: string
+        - name: hasFspVerified
+          in: query
+          required: false
+          description: Только строки true/false после TrimSpace; если параметр присутствует, пустое значение ошибочно.
+          schema:
+            type: boolean
+        - name: salaryMax
+          in: query
+          required: false
+          description: Неотрицательный int64; пустое значение ошибочно.
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: page
+          in: query
+          required: false
+          description: Положительный Go int; также проверяется переполнение OFFSET int64.
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: От 1 до 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      x-direct-handler-unauthorized:
+        description: При прямом вызове без claims возвращает JSON; через RequireAuth эта ветка недостижима.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              case1:
+                value:
+                  error: UNAUTHORIZED
+                  message: Unauthorized
+      x-handler-responses:
+        '200':
+          description: Результаты поиска.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateSearchListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Ошибка фильтров.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                case1:
+                  value:
+                    error: BAD_REQUEST
+                    message: grade должен быть Junior, Middle, Senior или Lead
+                case2:
+                  value:
+                    error: BAD_REQUEST
+                    message: skills не должен содержать пустые элементы
+                case3:
+                  value:
+                    error: BAD_REQUEST
+                    message: hasFspVerified должен быть true или false
+                case4:
+                  value:
+                    error: BAD_REQUEST
+                    message: salaryMax должен быть неотрицательным целым числом
+                case5:
+                  value:
+                    error: BAD_REQUEST
+                    message: page должен быть целым числом не меньше 1
+                case6:
+                  value:
+                    error: BAD_REQUEST
+                    message: limit должен быть целым числом от 1 до 100
+                case7:
+                  value:
+                    error: BAD_REQUEST
+                    message: Слишком большое значение page
+        '500':
+          description: Ошибка подсчёта, запроса, Scan или итерации БД.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                case1:
+                  value:
+                    error: INTERNAL_ERROR
+                    message: Internal Server Error
+      x-handler-security:
+        - BearerAuth: []
+  /api/v1/employer/candidates/match:
+    post:
+      summary: '[Частично реализован] Умный подбор кандидатов'
+      operationId: matchCandidates
+      tags:
+        - Employer Search
+      description: |-
+        Тело ограничено 64 KiB (65536 байт); только одно JSON-значение с EOF после него.
+        Неизвестные поля игнорируются. JSON null доходит до ошибки обязательного roleTitle.
+        Выборка: публичные verified-кандидаты с непустой категорией, совместимой специализацией,
+        подтверждённым грейдом не ниже targetGrade и всеми requiredSkills после нормализации.
+        При заданном бюджете желаемая зарплата должна существовать и не превышать его (проверки SQL numeric
+        и повторно после приведения к bigint). Таймаут запросов БД 5 секунд; его ошибка возвращается как 500.
+        Баллы: 40 за все обязательные навыки, 20 за точный грейд или 18 за более высокий,
+        до 20 за testScore (20*score/100; без результата 0), до 10 за долю дополнительных словарных навыков
+        из projectDescription (если таких нет, +10), +10 за hasFspVerified. Число достижений баллы не меняет.
+        Округление до 0.1; сортировка matchScore DESC, candidateId ASC; первые 20, без пагинации и total.
+        matchExplanation — фактический составной текст на английском; результаты тестов отсутствуют при SQL NULL.
+      x-implementation-status: partial
+      security: []
+      responses:
+        '404':
+          $ref: '#/components/responses/RouteNotFound'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchRequirementRequest'
+      x-direct-handler-unauthorized:
+        description: При прямом вызове без claims; RequireAuth перехватывает раньше и возвращает text/plain.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              case1:
+                value:
+                  error: UNAUTHORIZED
+                  message: Unauthorized
+      x-handler-responses:
+        '200':
+          description: Ранжированная подборка; matches=[] при отсутствии совпадений.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Ошибка JSON или параметров.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                case1:
+                  value:
+                    error: BAD_REQUEST
+                    message: Incorrect JSON
+                case2:
+                  value:
+                    error: BAD_REQUEST
+                    message: JSON object is required
+                case3:
+                  value:
+                    error: BAD_REQUEST
+                    message: roleTitle обязателен
+                case4:
+                  value:
+                    error: BAD_REQUEST
+                    message: targetGrade должен быть Junior, Middle, Senior или Lead
+                case5:
+                  value:
+                    error: BAD_REQUEST
+                    message: requiredSkills должен содержать от 1 до 50 навыков
+                case6:
+                  value:
+                    error: BAD_REQUEST
+                    message: maxSalaryBudget не может быть отрицательным
+                case7:
+                  value:
+                    error: BAD_REQUEST
+                    message: requiredSkills не должен содержать пустые навыки
+                case8:
+                  value:
+                    error: BAD_REQUEST
+                    message: roleTitle содержит несколько направлений; укажи одну специализацию
+                case9:
+                  value:
+                    error: BAD_REQUEST
+                    message: 'Не удалось определить специализацию по roleTitle: укажи Backend, Frontend, DevOps,
+                      QA, Mobile, Data Science, Data Engineering или Fullstack'
+        '403':
+          description: Нет записи employers для sub.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                case1:
+                  value:
+                    error: FORBIDDEN
+                    message: Employer profile is required
+        '413':
+          description: Превышен лимит тела.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                case1:
+                  value:
+                    error: PAYLOAD_TOO_LARGE
+                    message: Too large
+        '500':
+          description: Ошибка проверки профиля, запроса, Scan или итерации БД, включая таймаут.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                case1:
+                  value:
+                    error: INTERNAL_ERROR
+                    message: Internal Server Error
+      x-handler-security:
+        - BearerAuth: []
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
+      description: |-
+        Access JWT Keycloak: один заголовок Authorization: Bearer <token>.
+        Схема Bearer в заголовке регистронезависима; JWT claim typ должен быть строго Bearer.
+        Проверяются подпись RS256 по JWKS, iss=http://localhost:8080/realms/huntme,
+        aud, содержащий huntme-api, обязательный непросроченный exp, nbf при наличии и непустой sub.
+        Роли и подтверждение email не проверяются. sub используется как id профиля (TEXT, не обязательно UUID).
+        Для planned-операций это планируемая аутентификация; у отключённых partial-операций она указана
+        в x-handler-security, а фактически сервер отвечает 404 до проверки токена.
   responses:
-    400BadRequest:
-      description: Неверные параметры
+    Unauthorized:
+      description: JWT отсутствует или недействителен; роли и email_verified middleware не проверяет.
       content:
-        application/json:
+        text/plain:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    401Unauthorized:
-      description: Токен не предоставлен или недействителен
+            type: string
+          examples:
+            case1:
+              value: |
+                Unauthorized
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            enum:
+              - Bearer
+          description: Всегда Bearer.
+    InternalServerError:
+      description: Ошибка БД.
       content:
-        application/json:
+        text/plain:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    403Forbidden:
-      description: Доступ запрещен для текущей роли
+            type: string
+          examples:
+            case1:
+              value: |
+                Internal Server Error
+    ProfileNotFound:
+      description: Нет профиля с id, равным sub JWT.
       content:
-        application/json:
+        text/plain:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
+            type: string
+          examples:
+            case1:
+              value: |
+                Profile not found
+    ProfileConflict:
+      description: Нарушение уникальности при создании профиля.
+      content:
+        text/plain:
+          schema:
+            type: string
+          examples:
+            case1:
+              value: |
+                Profile already exists
   schemas:
     ErrorResponse:
       type: object
-      required:
-        - error
-        - message
       properties:
         error:
           type: string
-          example: "BAD_REQUEST"
         message:
           type: string
-          example: "Обязательное поле salaryMin должно быть больше 0"
-
-    User:
-      type: object
+      description: JSON-ошибка обработчиков поиска; не формат ошибок middleware или профиля.
       required:
-        - id
-        - email
-        - role
-      properties:
-        id:
-          type: string
-          example: "usr_10293"
-        email:
-          type: string
-          example: "developer@example.com"
-        role:
-          type: string
-          enum: [ candidate, employer, admin ]
-          example: "candidate"
-        emailVerified:
-          type: boolean
-          example: true
-
-    # RegisterRequest:
-    #   type: object
-    #   required:
-    #     - email
-    #     - password
-    #     - role
-    #   properties:
-    #     email:
-    #       type: string
-    #       format: email
-    #       example: "candidate@example.com"
-    #     password:
-    #       type: string
-    #       format: password
-    #       minLength: 8
-    #       example: "SecretPassword123!"
-    #     role:
-    #       type: string
-    #       enum: [ candidate, employer ]
-    #       example: "candidate"
-
-    # LoginRequest:
-    #   type: object
-    #   required:
-    #     - email
-    #     - password
-    #   properties:
-    #     email:
-    #       type: string
-    #       format: email
-    #       example: "candidate@example.com"
-    #     password:
-    #       type: string
-    #       example: "SecretPassword123!"
-
-    AuthTokens:
-      type: object
-      required:
-        - accessToken
-        - refreshToken
-      properties:
-        accessToken:
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        refreshToken:
-          type: string
-          example: "d9b20e0d-0348-43e8-8a89-290d2380582d"
-
-    # AuthResponse:
-    #   type: object
-    #   required:
-    #     - user
-    #     - tokens
-    #   properties:
-    #     user:
-    #       $ref: '#/components/schemas/User'
-    #     tokens:
-    #       $ref: '#/components/schemas/AuthTokens'
-
-    # ResetRequest:
-    #   type: object
-    #   required:
-    #     - email 
-    #   properties:
-    #     email:
-    #       type: string
-    #       format: email
-    #       example: "candidate@example.com"
-
-    # ResetForm:
-    #   type: object
-    #   required:
-    #     - email 
-    #   properties:
-    #     resetToken:
-    #       type: string
-    #       example: "fds9-8gfdg432-vxfdshu6-i9eu"
-    #     password:
-    #       type: string
-    #       format: password
-    #       minLength: 8
-    #       example: "SecretPassword123!"
-
-    # EmailChange:
-    #   type: object
-    #   required:
-    #     - newEmail
-    #     - password 
-    #   properties:
-    #     newEmail:
-    #       type: string
-    #       format: email
-    #       example: "candidate@example.com"
-    #     password:
-    #       type: string
-    #       format: email
-    #       example: "candidate@example.com"
-
-    # EmailChangeToken:
-    #   type: object
-    #   required:
-    #     - email 
-    #   properties:
-    #     emailChangeToken:
-    #       type: string
-    #       example: "jfd9@hfdfsi@dvnc"
-    
-    # PasswordChange:
-    #   type: object
-    #   required:
-    #     - newEmail
-    #     - password 
-    #   properties:
-    #     oldPassword:
-    #       type: string
-    #       format: password
-    #       minLength: 8
-    #       example: "SecretPassword123!"
-    #     newPassword:
-    #       type: string
-    #       format: password
-    #       minLength: 8
-    #       example: "SecretPassword123!"
-
+        - error
+        - message
     CandidateProfile:
       type: object
-      required:
-        - id
-        - fullName
-        - specialization
-        - category
       properties:
         id:
           type: string
-          example: "cand_9482"
+          description: sub JWT, первичный ключ TEXT.
+          example: 5a5f8d7d-8fb0-4c20-9242-ea734649411a
         fullName:
           type: string
-          example: "Алексей Иванов"
+          example: Алексей Иванов
         email:
           type: string
-          example: "alexey@example.com"
+          example: alexey@example.com
         phone:
           type: string
-          example: "+7 (999) 123-45-67"
+          example: +7 (999) 123-45-67
         city:
           type: string
-          example: "Москва"
+          example: Москва
         specialization:
           type: string
-          example: "Backend Developer"
+          example: Backend Developer
         claimedGrade:
           type: string
-          enum: [ Junior, Middle, Senior, Lead ]
-          example: "Middle"
+          example: Middle
         verifiedGrade:
           type: string
-          enum: [ Junior, Middle, Senior, Lead ]
-          example: "Middle"
+          example: Middle
         category:
           type: string
-          example: "Backend-разработчик с опытом (Middle)"
+          example: Backend-разработчик с опытом (Middle)
         experienceYears:
           type: number
           example: 3.5
+          format: float
         desiredSalary:
           type: integer
           description: Желаемая ЗП в рублях
           example: 220000
+          format: int64
         skills:
           type: array
           items:
             type: string
-          example: [ "Go", "PostgreSQL", "Docker", "Redis", "gRPC" ]
+          example:
+            - Go
+            - PostgreSQL
+            - Docker
+            - Redis
+            - gRPC
         softSkills:
           type: array
           items:
             type: string
-          example: [ "Командная работа", "Тайм-менеджмент" ]
-        fspId:
-          type: string
-          nullable: true
-          example: "FSP-2026-8849"
-        fspAchievements:
-          type: array
-          items:
-            $ref: '#/components/schemas/FspAchievement'
-        testingStatus:
-          type: string
-          enum: [ not_started, survey_passed, test_in_progress, verified ]
-          example: "verified"
-        lastTestDate:
-          type: string
-          format: date-time
-          example: "2026-09-15T10:00:00Z"
-        canRetakeTestAfter:
-          type: string
-          format: date-time
-          description: Дата, начиная с которой разрешена пересдача (раз в 3 месяца)
-          example: "2026-12-15T10:00:00Z"
-
+          example:
+            - Командная работа
+            - Тайм-менеджмент
+      description: Точный GetProfileResponse. Nullable строки БД преобразуются в пустые строки, числа — в 0; skills/softSkills
+        — непустые по nullability массивы, могут быть []. Полей ФСП, тестирования и приватности в ответе нет.
+      required:
+        - id
+        - fullName
+        - email
+        - phone
+        - city
+        - specialization
+        - claimedGrade
+        - verifiedGrade
+        - category
+        - experienceYears
+        - desiredSalary
+        - skills
+        - softSkills
     UpdateCandidateProfileRequest:
       type: object
       properties:
         fullName:
           type: string
+          nullable: true
+          description: TrimSpace; непустое значение. При пустом значении фактическая ошибка Empty company name.
+        email:
+          type: string
+          nullable: true
+          description: Без проверки формата и обрезки пробелов.
         phone:
           type: string
+          nullable: true
         city:
           type: string
+          nullable: true
         specialization:
           type: string
+          nullable: true
+        claimedGrade:
+          type: string
+          nullable: true
         experienceYears:
           type: number
+          format: float
+          nullable: true
+          description: float32; NUMERIC(5,2) БД >=0; нарушение CHECK/диапазона возвращает 500, не 400.
         desiredSalary:
           type: integer
+          description: int64; NUMERIC(14,2) БД >=0; нарушение CHECK/диапазона возвращает 500, не 400.
+          format: int64
+          nullable: true
         skills:
           type: array
           items:
             type: string
+            nullable: true
+          nullable: true
+          description: '[] очищает массив; null самого поля сохраняет прежнее значение. null внутри массива декодируется
+            Go как пустая строка; содержимое навыков не валидируется.'
         softSkills:
           type: array
           items:
             type: string
-
+            nullable: true
+          nullable: true
+          description: '[] очищает массив; null самого поля сохраняет прежнее значение. null внутри массива декодируется
+            Go как пустая строка; содержимое навыков не валидируется.'
+      nullable: true
+      description: Все поля необязательны. null и отсутствие поля не изменяют значение (COALESCE); пустой массив
+        очищает навыки. {} и JSON null допустимы. Грейды — произвольные строки; verifiedGrade/category игнорируются.
+        Остаток тела и неизвестные поля не проверяются.
     FspAchievement:
       type: object
       required:
@@ -805,24 +1234,24 @@ components:
       properties:
         id:
           type: string
-          example: "fsp_ach_12"
+          example: fsp_ach_12
         title:
           type: string
-          example: "Всероссийский хакатон ФСП по алгоритмам 2025"
+          example: Всероссийский хакатон ФСП по алгоритмам 2025
         eventType:
           type: string
-          example: "Хакатон / Спортивное программирование"
+          example: Хакатон / Спортивное программирование
         rank:
           type: string
-          example: "1 место (Победитель)"
+          example: 1 место (Победитель)
         date:
           type: string
           format: date
-          example: "2025-11-20"
+          example: '2025-11-20'
         score:
           type: number
           example: 98.5
-
+      x-implementation-status: planned
     TestingSurveyRequest:
       type: object
       required:
@@ -831,12 +1260,16 @@ components:
       properties:
         specialization:
           type: string
-          example: "Backend Developer"
+          example: Backend Developer
         claimedGrade:
           type: string
-          enum: [ Junior, Middle, Senior, Lead ]
-          example: "Middle"
-
+          enum:
+            - Junior
+            - Middle
+            - Senior
+            - Lead
+          example: Middle
+      x-implementation-status: planned
     TestingSession:
       type: object
       required:
@@ -845,10 +1278,10 @@ components:
       properties:
         sessionId:
           type: string
-          example: "test_sess_7719"
+          example: test_sess_7719
         claimedGrade:
           type: string
-          example: "Middle"
+          example: Middle
         questionsCount:
           type: integer
           example: 5
@@ -859,21 +1292,21 @@ components:
             properties:
               id:
                 type: string
-                example: "q_1"
+                example: q_1
               type:
                 type: string
-                example: "code_task"
+                example: code_task
               title:
                 type: string
-                example: "Оптимизация запроса к СУБД и алгоритм кэширования"
+                example: Оптимизация запроса к СУБД и алгоритм кэширования
               description:
                 type: string
-                example: "Предложите способ решения задачи..."
+                example: Предложите способ решения задачи...
               options:
                 type: array
                 items:
                   type: string
-
+      x-implementation-status: planned
     TestSubmitRequest:
       type: object
       required:
@@ -882,7 +1315,7 @@ components:
       properties:
         sessionId:
           type: string
-          example: "test_sess_7719"
+          example: test_sess_7719
         answers:
           type: array
           items:
@@ -893,11 +1326,11 @@ components:
             properties:
               questionId:
                 type: string
-                example: "q_1"
+                example: q_1
               answer:
                 type: string
-                example: "Использование индексного покрытия и LRU кэша"
-
+                example: Использование индексного покрытия и LRU кэша
+      x-implementation-status: planned
     TestResultResponse:
       type: object
       required:
@@ -910,81 +1343,97 @@ components:
           example: 85.0
         verifiedGrade:
           type: string
-          example: "Middle"
+          example: Middle
         assignedCategory:
           type: string
-          example: "Backend-разработчик с опытом (Middle)"
+          example: Backend-разработчик с опытом (Middle)
         feedback:
           type: string
-          example: "Тест пройден успешно! Категория подтверждена."
-
+          example: Тест пройден успешно! Категория подтверждена.
+      x-implementation-status: planned
     EmployerProfile:
       type: object
       required:
+        - id
         - companyName
         - industry
+        - description
+        - website
+        - contactPerson
       properties:
         id:
           type: string
-          example: "emp_551"
+          example: emp_551
         companyName:
           type: string
-          example: "Яндекс / СберДеваайсы"
+          example: Яндекс / СберДеваайсы
         industry:
           type: string
-          example: "Финтех / ИТ-Инфраструктура"
+          example: Финтех / ИТ-Инфраструктура
         description:
           type: string
-          example: "Разрабатываем высоконагруженные сервисы..."
+          example: Разрабатываем высоконагруженные сервисы...
         website:
           type: string
-          example: "https://company.ru"
+          example: https://company.ru
         contactPerson:
           type: string
-          example: "Мария Смирнова (HRD)"
-
+          example: Мария Смирнова (HRD)
+      description: GetEmployerProfileResponse отключённого обработчика. Nullable строки БД заменяются на пустые;
+        все поля присутствуют. id — sub JWT.
     CandidateSearchItem:
       type: object
       required:
         - candidateId
-        - category
+        - displayName
         - verifiedGrade
+        - category
         - skills
         - hasFspVerified
-      description: >
-        Анонимизированная карточка соискателя в выдаче поиска.
-        Личные контакты (email, телефон, фамилия) скрыты.
+        - fspAchievementsCount
+      description: Карточка существующих отключённых обработчиков поиска. Контактов нет. Nullable поля БД с omitempty
+        отсутствуют, а не равны null. Обычный поиск не выбирает testScore; match возвращает его только при наличии
+        допустимого значения.
       properties:
         candidateId:
           type: string
-          example: "cand_9482"
+          example: cand_9482
         displayName:
           type: string
-          description: Скрыто или имя без фамилии
-          example: "Алексей И."
+          enum:
+            - Кандидат
+          example: Кандидат
         city:
           type: string
-          example: "Москва"
+          example: Москва
+          description: При SQL NULL поле отсутствует (omitempty).
         specialization:
           type: string
-          example: "Backend Developer"
+          example: Backend Developer
+          description: При SQL NULL поле отсутствует (omitempty).
         verifiedGrade:
           type: string
-          example: "Middle"
+          example: Middle
         category:
           type: string
-          example: "Backend-разработчик с опытом (Middle)"
+          example: Backend-разработчик с опытом (Middle)
         experienceYears:
           type: number
           example: 3.5
+          description: При SQL NULL поле отсутствует (omitempty).
         desiredSalary:
           type: integer
           example: 220000
+          description: При SQL NULL поле отсутствует (omitempty).
+          format: int64
         skills:
           type: array
           items:
             type: string
-          example: [ "Go", "PostgreSQL", "Docker" ]
+          example:
+            - Go
+            - PostgreSQL
+            - Docker
         hasFspVerified:
           type: boolean
           example: true
@@ -994,7 +1443,9 @@ components:
         testScore:
           type: number
           example: 85.0
-
+          description: При SQL NULL поле отсутствует (omitempty).
+          minimum: 0
+          maximum: 100
     CandidateDetail:
       allOf:
         - $ref: '#/components/schemas/CandidateSearchItem'
@@ -1014,14 +1465,14 @@ components:
               properties:
                 email:
                   type: string
-                  example: "alexey@example.com"
+                  example: alexey@example.com
                 phone:
                   type: string
-                  example: "+7 (999) 123-45-67"
+                  example: +7 (999) 123-45-67
                 fullName:
                   type: string
-                  example: "Иванов Алексей Сергеевич"
-
+                  example: Иванов Алексей Сергеевич
+      x-implementation-status: planned
     CandidateSearchListResponse:
       type: object
       required:
@@ -1033,17 +1484,19 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/CandidateSearchItem'
+            $ref: '#/components/schemas/CandidateBankItem'
         total:
           type: integer
           example: 42
+          format: int64
         page:
           type: integer
           example: 1
         limit:
           type: integer
           example: 10
-
+      description: items=[] при отсутствии результатов; total — COUNT до LIMIT/OFFSET. Подсчёт и выборка выполняются
+        отдельно, без общей транзакции.
     MatchRequirementRequest:
       type: object
       required:
@@ -1053,23 +1506,46 @@ components:
       properties:
         roleTitle:
           type: string
-          example: "Senior Go Developer"
+          example: Senior Go Developer
+          description: 'TrimSpace; распознаётся ровно одно направление по словарю matching_score.go: Backend, Frontend,
+            DevOps/SRE, QA, Mobile, Data Science/ML, Data Engineering, Fullstack. Если направление не найдено, Go/Golang
+            означает Backend. Неизвестное или неоднозначное направление — 400.'
         targetGrade:
           type: string
-          enum: [ Junior, Middle, Senior, Lead ]
-          example: "Senior"
+          enum:
+            - Junior
+            - Middle
+            - Senior
+            - Lead
+          example: Senior
+          description: TrimSpace, затем точное сравнение с enum.
         requiredSkills:
           type: array
           items:
             type: string
-          example: [ "Go", "Kafka", "PostgreSQL", "Kubernetes" ]
+          example:
+            - Go
+            - Kafka
+            - PostgreSQL
+            - Kubernetes
+          minItems: 1
+          maxItems: 50
+          description: Проверяется исходная длина 1–50. Каждый навык после TrimSpace непустой. Регистр и известные
+            алиасы нормализуются; дубликаты удаляются, неизвестные непустые навыки разрешены.
         projectDescription:
           type: string
-          example: "Проект по созданию распределенной платежной системы..."
+          example: Проект по созданию распределенной платежной системы...
+          nullable: true
+          description: TrimSpace; null/отсутствие трактуется как пустая строка. Словарное извлечение дополнительных
+            навыков, без ML/LLM.
         maxSalaryBudget:
           type: integer
           example: 350000
-
+          format: int64
+          minimum: 0
+          nullable: true
+          description: Необязательный верхний бюджет в рублях. null/отсутствие отключает фильтр; 0 — реальный нулевой
+            бюджет.
     MatchResultItem:
       type: object
       required:
@@ -1081,13 +1557,15 @@ components:
           $ref: '#/components/schemas/CandidateSearchItem'
         matchScore:
           type: number
-          description: Процент соответствия (0-100%)
+          description: Баллы по формуле обработчика, округление до 1 знака; не вероятность найма.
           example: 94.5
+          minimum: 0
+          maximum: 100
         matchExplanation:
           type: string
           description: Обоснование попадания кандидата в подборку (объяснимость выдачи)
-          example: "Подтвержденный грейд Senior, 100% совпадение по стек (Go, Kafka), 1-е место на хакатоне ФСП по алгоритмам."
-
+          example: 'Specialization: Backend Developer; All required skills are matched (1/1): Go; VerifiedGrade
+            Middle; needed Middle; Test results: 85.0/100; No FSP aschievements.'
     MatchResponse:
       type: object
       required:
@@ -1097,7 +1575,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MatchResultItem'
-
+          maxItems: 20
     CreateInvitationRequest:
       type: object
       required:
@@ -1109,10 +1587,10 @@ components:
       properties:
         candidateId:
           type: string
-          example: "cand_9482"
+          example: cand_9482
         offerDescription:
           type: string
-          example: "Приглашаем в команду разработки Финтех направления на позицию Backend Go Developer..."
+          example: Приглашаем в команду разработки Финтех направления на позицию Backend Go Developer...
         salaryMin:
           type: integer
           description: Обязательное поле! Мин. ЗП в рублях
@@ -1123,8 +1601,11 @@ components:
           example: 280000
         contactMethod:
           type: string
-          example: "Telegram: @hr_yandex_manager / Телефон: +7 (903) 000-00-00"
-
+          example: 'Telegram: @hr_yandex_manager / Телефон: +7 (903) 000-00-00'
+      x-implementation-status: planned
+      description: 'План из прежней спецификации: приглашение конкретному candidateId, описание предложения, обязательная
+        вилка salaryMin–salaryMax в рублях и способ связи. Публикация вакансии и vacancyId не требуются. Проверки
+        ещё не реализованы.'
     Invitation:
       type: object
       required:
@@ -1136,22 +1617,23 @@ components:
         - salaryMax
         - status
         - createdAt
+        - contactMethod
       properties:
         id:
           type: string
-          example: "inv_8820"
+          example: inv_8820
         candidateId:
           type: string
-          example: "cand_9482"
+          example: cand_9482
         employerId:
           type: string
-          example: "emp_551"
+          example: emp_551
         employerCompany:
           type: string
-          example: "Яндекс Девайсы"
+          example: Яндекс Девайсы
         offerDescription:
           type: string
-          example: "Приглашаем в команду..."
+          example: Приглашаем в команду...
         salaryMin:
           type: integer
           example: 220000
@@ -1160,15 +1642,19 @@ components:
           example: 280000
         contactMethod:
           type: string
-          example: "Telegram: @hr_yandex_manager"
+          example: 'Telegram: @hr_yandex_manager'
         status:
           type: string
-          enum: [ sent, viewed, accepted, rejected ]
-          example: "sent"
+          enum:
+            - sent
+            - viewed
+            - accepted
+            - rejected
+          example: sent
         createdAt:
           type: string
           format: date-time
-          example: "2026-10-06T10:00:00Z"
+          example: '2026-10-06T10:00:00Z'
         candidateContacts:
           type: object
           nullable: true
@@ -1180,3 +1666,251 @@ components:
               type: string
             phone:
               type: string
+      x-implementation-status: planned
+      description: 'План из прежней спецификации; enum sent/viewed/accepted/rejected сохранён и не задан буквально
+        ТЗ. Проектное уточнение по ТЗ 2.2: contactMethod теперь обязателен в ответе. Backend это не реализует. Контакты
+        кандидата доступны только его адресату-работодателю после принятия; чужие приглашения недоступны.'
+      x-design-proposal:
+        required-response-fields:
+          - contactMethod
+        basis: 'ТЗ 2.2: предложение содержит название компании и способ связи; остальные URL/поля/статусы сохранены
+          из репозитория.'
+    PlannedCandidateProfile:
+      type: object
+      required:
+        - id
+        - fullName
+        - specialization
+        - category
+      properties:
+        id:
+          type: string
+          example: cand_9482
+        fullName:
+          type: string
+          example: Алексей Иванов
+        email:
+          type: string
+          example: alexey@example.com
+        phone:
+          type: string
+          example: +7 (999) 123-45-67
+        city:
+          type: string
+          example: Москва
+        specialization:
+          type: string
+          example: Backend Developer
+        claimedGrade:
+          type: string
+          enum:
+            - Junior
+            - Middle
+            - Senior
+            - Lead
+          example: Middle
+        verifiedGrade:
+          type: string
+          enum:
+            - Junior
+            - Middle
+            - Senior
+            - Lead
+          example: Middle
+        category:
+          type: string
+          example: Backend-разработчик с опытом (Middle)
+        experienceYears:
+          type: number
+          example: 3.5
+        desiredSalary:
+          type: integer
+          description: Желаемая ЗП в рублях
+          example: 220000
+        skills:
+          type: array
+          items:
+            type: string
+          example:
+            - Go
+            - PostgreSQL
+            - Docker
+            - Redis
+            - gRPC
+        softSkills:
+          type: array
+          items:
+            type: string
+          example:
+            - Командная работа
+            - Тайм-менеджмент
+        fspId:
+          type: string
+          nullable: true
+          example: FSP-2026-8849
+        fspAchievements:
+          type: array
+          items:
+            $ref: '#/components/schemas/FspAchievement'
+        testingStatus:
+          type: string
+          enum:
+            - not_started
+            - survey_passed
+            - test_in_progress
+            - verified
+          example: verified
+        lastTestDate:
+          type: string
+          format: date-time
+          example: '2026-09-15T10:00:00Z'
+        canRetakeTestAfter:
+          type: string
+          format: date-time
+          description: Дата, начиная с которой разрешена пересдача (раз в 3 месяца)
+          example: '2026-12-15T10:00:00Z'
+      description: Сохранённая прежняя проектная модель расширенного профиля для будущей ФСП-интеграции; текущий
+        GET её не возвращает.
+    AuthMeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Непустой sub access JWT.
+          example: 5a5f8d7d-8fb0-4c20-9242-ea734649411a
+      required:
+        - id
+    ResumeError:
+      type: object
+      properties:
+        error:
+          type: string
+      description: Ошибка PDF-обработчика. Ошибка JWT остаётся text/plain.
+      required:
+        - error
+    CreateCandidateProfileRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          description: TrimSpace; после обрезки не пусто.
+        email:
+          type: string
+          minLength: 1
+          description: TrimSpace; после обрезки не пусто. Формат email и соответствие JWT не проверяются.
+      required:
+        - fullName
+        - email
+    UpdatePrivacyRequest:
+      type: object
+      properties:
+        isPublic:
+          type: boolean
+          nullable: true
+        hideCurrentCompany:
+          type: boolean
+          nullable: true
+      nullable: true
+      description: Фактически декодируемые поля. privacyAgreement152 игнорируется. null/отсутствие задумывались
+        как сохранение значения, но текущий SQL ошибочен.
+    ResumeTextResponse:
+      type: object
+      properties:
+        text:
+          type: string
+          description: UTF-8 текст после TrimSpace; файл и профиль не сохраняются.
+          example: |-
+            Алексей Иванов
+            Go, PostgreSQL
+      required:
+        - text
+    CreateEmployerProfileRequest:
+      type: object
+      properties:
+        companyName:
+          type: string
+          minLength: 1
+          description: TrimSpace; непустая строка.
+      required:
+        - companyName
+    UpdateEmployerProfileRequest:
+      type: object
+      properties:
+        companyName:
+          type: string
+          nullable: true
+        industry:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        contactPerson:
+          type: string
+          nullable: true
+      nullable: true
+      description: Все поля необязательны; null и отсутствие сохраняют значение, пустая строка допустима кроме companyName.
+        companyName обрезается TrimSpace и не может быть пустой. {} и JSON null допустимы. website не валидируется
+        как URL.
+    CandidateBankItem:
+      type: object
+      required:
+        - candidateId
+        - displayName
+        - verifiedGrade
+        - category
+        - skills
+        - hasFspVerified
+        - fspAchievementsCount
+      description: 'Обычная выдача searchCandidatesHandler: testScore не выбирается и отсутствует; nullable поля
+        БД пропускаются (omitempty). Контактов нет.'
+      properties:
+        candidateId:
+          type: string
+          example: cand_9482
+        displayName:
+          type: string
+          enum:
+            - Кандидат
+          example: Кандидат
+        city:
+          type: string
+          example: Москва
+          description: При SQL NULL поле отсутствует (omitempty).
+        specialization:
+          type: string
+          example: Backend Developer
+          description: При SQL NULL поле отсутствует (omitempty).
+        verifiedGrade:
+          type: string
+          example: Middle
+        category:
+          type: string
+          example: Backend-разработчик с опытом (Middle)
+        experienceYears:
+          type: number
+          example: 3.5
+          description: При SQL NULL поле отсутствует (omitempty).
+        desiredSalary:
+          type: integer
+          example: 220000
+          description: При SQL NULL поле отсутствует (omitempty).
+          format: int64
+        skills:
+          type: array
+          items:
+            type: string
+          example:
+            - Go
+            - PostgreSQL
+            - Docker
+        hasFspVerified:
+          type: boolean
+          example: true
+        fspAchievementsCount:
+          type: integer
+          example: 2

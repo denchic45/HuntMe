@@ -3,6 +3,7 @@ package main
 import (
 	"HuntMeBackend/handlers/auth"
 	"HuntMeBackend/handlers/candidate"
+	"HuntMeBackend/handlers/employer"
 	"HuntMeBackend/middleware"
 	"context"
 	"fmt"
@@ -48,6 +49,7 @@ func main() {
 
 	auth.RegisterRoutes(mux, requireAuth)
 	candidate.RegisterRoutes(mux, requireAuth, dbPool)
+	employer.RegisterRoutes(mux, requireAuth, dbPool)
 
 	server := &http.Server{
 		Addr:              ":8081",
