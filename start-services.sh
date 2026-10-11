@@ -43,3 +43,7 @@ echo "Команды для мониторинга:"
 echo "  Логи бэкенда:       $COMPOSE logs -f backend"
 echo "  Статус контейнеров: $COMPOSE ps"
 echo "  Остановка:          $COMPOSE down"
+echo ""
+echo "💻 Запуск фронтенда (в отдельном терминале):"
+echo "  npm run dev --prefix frontend"
+
