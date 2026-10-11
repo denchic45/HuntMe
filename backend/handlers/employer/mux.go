@@ -1,6 +1,7 @@
 package employer
 
 import (
+	"HuntMeBackend/middleware"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,6 +16,8 @@ func RegisterRoutes(
 	requireAuth func(http.Handler) http.Handler,
 	pool *pgxpool.Pool) {
 	h := &Handler{db: pool}
+	authenticated := requireAuth
+	requireAuth = func(next http.Handler) http.Handler { return authenticated(middleware.RequireRole("employer")(next)) }
 
 	mux.Handle(
 		"GET /api/v1/employer/profile",
@@ -29,7 +32,11 @@ func RegisterRoutes(
 		requireAuth(http.HandlerFunc(h.editProfileHandler)),
 	)
 	mux.Handle(
-		"PATCH /api/v1/employer/candidates/",
+		"GET /api/v1/employer/candidates/{$}",
+		requireAuth(http.HandlerFunc(h.searchCandidatesHandler)),
+	)
+	mux.Handle(
+		"GET /api/v1/employer/candidates/",
 		requireAuth(http.HandlerFunc(h.searchCandidatesHandler)),
 	)
 	mux.Handle(

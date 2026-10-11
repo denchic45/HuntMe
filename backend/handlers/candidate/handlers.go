@@ -2,8 +2,10 @@ package candidate
 
 import (
 	"HuntMeBackend/middleware"
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -52,14 +54,22 @@ type EditPrivacyRequest struct {
 }
 
 func (h *Handler) createProfileHandler(w http.ResponseWriter, r *http.Request) {
-	cont, ok := middleware.UserFromContext(r.Context())
-	if !ok {
-		w.Header().Set("WWW-Authenticate", "Bearer")
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	cont, _ := middleware.UserFromContext(r.Context())
+	var req CreateProfileRequest
+	if err := decodeRequest(w, r, &req); err != nil {
+		status, code, message := http.StatusBadRequest, "BAD_REQUEST", "Invalid JSON: expected one object with known, unique fields"
+		var sizeErr *http.MaxBytesError
+		if errors.As(err, &sizeErr) {
+			status, code, message = http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE", "JSON exceeds 64 KiB"
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-store")
+		w.WriteHeader(status)
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": code, "message": message}); err != nil {
+			log.Printf("encode response: %v", err)
+		}
 		return
 	}
-
-	var req CreateProfileRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -247,8 +257,8 @@ func (h *Handler) editPrivacy(w http.ResponseWriter, r *http.Request) {
 	tag, err := h.db.Exec(r.Context(), `
     UPDATE public.candidates
     SET
-    	is_public = COALESCE($2::text, is_public),
-        hide_current_company = COALESCE($3::text, hide_current_company)
+    	is_public = COALESCE($2::boolean, is_public),
+        hide_current_company = COALESCE($3::boolean, hide_current_company)
     WHERE id = $1
 `,
 		cont.Subject,
@@ -268,6 +278,76 @@ func (h *Handler) editPrivacy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func decodeRequest(w http.ResponseWriter, r *http.Request, dst any) error {
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+	defer r.Body.Close()
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 || data[0] != '{' || !uniqueJSONKeys(data) {
+		return errors.New("one JSON object with unique keys is required")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(dst); err != nil {
+		return err
+	}
+	if err := decoder.Decode(new(any)); err != io.EOF {
+		return errors.New("trailing JSON is not allowed")
+	}
+	return nil
+}
+
+func uniqueJSONKeys(data []byte) bool {
+	d := json.NewDecoder(bytes.NewReader(data))
+	var value func() bool
+	value = func() bool {
+		t, err := d.Token()
+		if err != nil {
+			return false
+		}
+		delim, ok := t.(json.Delim)
+		if !ok {
+			return true
+		}
+		switch delim {
+		case '{':
+			keys := make(map[string]bool)
+			for d.More() {
+				k, err := d.Token()
+				if err != nil {
+					return false
+				}
+				s, ok := k.(string)
+				if !ok || keys[s] {
+					return false
+				}
+				keys[s] = true
+				if !value() {
+					return false
+				}
+			}
+		case '[':
+			for d.More() {
+				if !value() {
+					return false
+				}
+			}
+		default:
+			return false
+		}
+		_, err = d.Token()
+		return err == nil
+	}
+	if !value() {
+		return false
+	}
+	_, err := d.Token()
+	return err == io.EOF
 }
 
 func nullHandler(w http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -11,10 +13,12 @@ import (
 
 type AccessClaims struct {
 	jwt.RegisteredClaims
-	TokenType string `json:"typ"`
-	// Username      string `json:"username"`
-	// Email         string `json:"email"`
-	// EmailVerified bool   `json:"email_verified"`
+	TokenType     string `json:"typ"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	RealmAccess   struct {
+		Roles []string `json:"roles"`
+	} `json:"realm_access"`
 }
 
 type userContextKey struct{}
@@ -61,6 +65,30 @@ func RequireAuth(
 
 			ctx := context.WithValue(r.Context(), userContextKey{}, claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func RequireRole(role string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims, ok := UserFromContext(r.Context())
+			if !ok {
+				unauthorized(w)
+				return
+			}
+			for _, actual := range claims.RealmAccess.Roles {
+				if actual == role {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.Header().Set("Cache-Control", "no-store")
+			w.WriteHeader(403)
+			if err := json.NewEncoder(w).Encode(map[string]string{"error": "FORBIDDEN", "message": "Required realm role: " + role}); err != nil {
+				log.Printf("encode response: %v", err)
+			}
 		})
 	}
 }
