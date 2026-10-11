@@ -66,7 +66,7 @@ const handleClick = (e: MouseEvent) => {
   <button
     :class="[variantClasses, sizeClasses, { 'w-full': block }]"
     :disabled="disabled || loading"
-    class="inline-flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]"
+    class="inline-flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98] whitespace-nowrap shrink-0"
     type="button"
     @click="handleClick"
   >

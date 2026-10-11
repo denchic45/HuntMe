@@ -29,7 +29,7 @@ function handleReset() {
         <div class="flex items-center gap-2">
           <i class="pi pi-shield text-fsp-blue text-lg"></i>
           <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-            Приватность и персональные данные (152-ФЗ)
+            Приватность и персональные данные
           </h3>
         </div>
         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -62,12 +62,15 @@ function handleReset() {
         </div>
 
         <BaseButton
+          class="shrink-0 whitespace-nowrap self-start sm:self-center"
           :icon="isSearchActive ? 'pi pi-eye-slash' : 'pi pi-eye'"
           size="sm"
           variant="outline"
           @click="toggleSearchStatus"
         >
-          {{ isSearchActive ? 'Приостановить поиск' : 'Возобновить поиск' }}
+          <span class="whitespace-nowrap">{{
+            isSearchActive ? 'Приостановить поиск' : 'Возобновить поиск'
+          }}</span>
         </BaseButton>
       </div>
 

@@ -31,8 +31,8 @@ const formatSalary = (val: number) => {
       <div class="flex items-center gap-2.5">
         <i class="pi pi-shield text-base text-fsp-blue"></i>
         <span>
-          <strong>Режим анонимного превью:</strong> Так вашу карточку видят рекрутеры до того, как
-          вы примете оффер. Ваши прямые контакты надежно скрыты (152-ФЗ).
+          Так вашу карточку видят рекрутеры до того, как вы примете оффер. Ваши прямые контакты
+          надежно скрыты.
         </span>
       </div>
       <BaseButton

@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useLandingRoleStore } from '@/stores/landingRole'
 import BaseBadge from '@/components/common/BaseBadge.vue'
-import BaseButton from '@/components/common/BaseButton.vue'
 import LandingRoadmapStep from '@/components/landing/LandingRoadmapStep.vue'
 import type { RoadmapStep } from '@/types/landing'
 
@@ -66,12 +65,54 @@ const candidateSteps: RoadmapStep[] = [
   },
 ]
 
-const employerPlaceholderSteps = [
-  { step: '01', title: 'Описание потребности', desc: 'Стек, задачи и требуемый грейд' },
-  { step: '02', title: 'Explainable AI Match', desc: 'Умная выборка с обоснованием' },
-  { step: '03', title: 'Оффер с открытой ЗП', desc: 'Адресное предложение кандидату' },
-  { step: '04', title: 'Прямой контакт', desc: 'Получение контактов после согласия' },
+const employerSteps: RoadmapStep[] = [
+  {
+    number: '01',
+    subtitle: 'ШАГ 01 • ПОТРЕБНОСТЬ',
+    title: 'Формирование профиля вакансии',
+    description:
+      'Задайте технологический стек, уровень задач, зарплатную вилку и требуемый подтвержденный грейд. Платформа помогает сформулировать объективные требования без размытых формулировок.',
+    badgeText: 'Профиль роли',
+    badgeVariant: 'primary',
+    icon: 'pi pi-file-edit',
+    tags: ['Стек технологий', 'Грейд Middle / Senior', 'Прозрачная вилка ЗП'],
+  },
+  {
+    number: '02',
+    subtitle: 'ШАГ 02 • АНАЛИТИКА ИИ',
+    title: 'Explainable AI Match и скоринг',
+    description:
+      'Алгоритм ранжирует верифицированных кандидатов на основе результатов адаптивного тестирования и соревнований ФСП. Вы получаете прозрачное обоснование каждого совпадения.',
+    badgeText: 'Explainable AI',
+    badgeVariant: 'glow',
+    icon: 'pi pi-bolt',
+    tags: ['Умный скоринг', 'Обоснование матча', 'Верификация ФСП'],
+  },
+  {
+    number: '03',
+    subtitle: 'ШАГ 03 • ОФФЕР',
+    title: 'Адресное предложение с открытой ЗП',
+    description:
+      'Направляйте персонализированные офферы подходящим специалистам. Платформа исключает спам: каждое предложение содержит реальные условия, проектные вызовы и фиксированную вилку вознаграждения.',
+    badgeText: 'Адресный инвайт',
+    badgeVariant: 'primary',
+    icon: 'pi pi-send',
+    tags: ['Высокая конверсия', 'Без холодного спама', 'Фиксированная вилка'],
+  },
+  {
+    number: '04',
+    subtitle: 'ШАГ 04 • КОНТАКТ',
+    title: 'Снятие анонимности и прямой диалог',
+    description:
+      'Как только специалист подтверждает интерес к вашему офферу, открываются его прямые контакты для технического интервью и быстрого выхода на работу.',
+    badgeText: 'Прямой найм',
+    badgeVariant: 'danger',
+    icon: 'pi pi-check-circle',
+    tags: ['Прямой контакт', 'Защита 152-ФЗ', 'Быстрый оффер'],
+  },
 ]
+
+const currentSteps = computed(() => (roleStore.isCandidate ? candidateSteps : employerSteps))
 
 const headerData = computed(() => {
   return roleStore.isCandidate
@@ -113,8 +154,8 @@ const headerData = computed(() => {
         </p>
       </div>
 
-      <!-- ТРЕК СОИСКАТЕЛЯ: Минималистичный Roadmap / Timeline с линией -->
-      <div v-if="roleStore.isCandidate" class="relative">
+      <!-- Дорожная карта (Roadmap) с вертикальной линией таймлайна -->
+      <div class="relative">
         <!-- Непрерывная вертикальная линия связи на десктопе с плавным появлением и затуханием по краям -->
         <div
           class="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-gradient-to-b from-transparent via-fsp-blue via-50% to-transparent -z-0"
@@ -131,57 +172,12 @@ const headerData = computed(() => {
         <!-- Список шагов таймлайна -->
         <div class="space-y-8 md:space-y-12 relative z-10">
           <LandingRoadmapStep
-            v-for="(step, index) in candidateSteps"
+            v-for="(step, index) in currentSteps"
             :key="step.number"
-            :is-last="index === candidateSteps.length - 1"
+            :is-last="index === currentSteps.length - 1"
             :is-left="index % 2 === 0"
             :step="step"
           />
-        </div>
-      </div>
-
-      <!-- ТРЕК РАБОТОДАТЕЛЯ: Технологичная заглушка на будущее -->
-      <div
-        v-else
-        class="rounded-3xl bg-white dark:bg-fsp-dark border border-gray-200 dark:border-fsp-dark-border p-8 md:p-12 shadow-xl space-y-8 text-center max-w-3xl mx-auto"
-      >
-        <div
-          class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-fsp-blue/15 text-fsp-blue text-xs sm:text-sm font-mono font-bold"
-        >
-          <i class="pi pi-cog pi-spin"></i>
-          <span>Раздел для компаний в активной разработке</span>
-        </div>
-
-        <div class="space-y-3">
-          <h3 class="text-2xl sm:text-3xl font-bold font-sans text-gray-900 dark:text-white">
-            Механика найма для работодателей
-          </h3>
-          <p
-            class="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-sans max-w-xl mx-auto"
-          >
-            Скоро здесь появится интерактивная демонстрация работы AI-подбора и сценария выхода на
-            контакт. Вы можете ознакомиться с треком соискателя прямо сейчас:
-          </p>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left pt-2">
-          <div
-            v-for="p in employerPlaceholderSteps"
-            :key="p.step"
-            class="p-4 rounded-xl bg-gray-50 dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border space-y-2"
-          >
-            <div class="text-sm font-mono font-bold text-fsp-blue">{{ p.step }}</div>
-            <div class="text-sm font-bold font-sans text-gray-900 dark:text-white">
-              {{ p.title }}
-            </div>
-            <div class="text-xs text-gray-500 font-sans leading-snug">{{ p.desc }}</div>
-          </div>
-        </div>
-
-        <div class="pt-4 flex justify-center">
-          <BaseButton icon="pi pi-user" variant="outline" @click="roleStore.setRole('candidate')">
-            Посмотреть путь соискателя
-          </BaseButton>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 
 const router = useRouter()
-const { profile, completionPercentage, isVerifiedFsp } = useCandidateProfile()
+const { profile, isVerifiedFsp } = useCandidateProfile()
 const { newInvitesCount } = useInvites()
 
 function formatAge(age: number): string {
@@ -66,8 +66,8 @@ function formatAge(age: number): string {
       </div>
     </div>
 
-    <!-- 4 Главные карточки дашборда -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- 3 Главные карточки дашборда -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <!-- 1. Верифицированная категория -->
       <div
         class="bg-white dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border rounded-2xl p-5 shadow-xs flex flex-col justify-between"
@@ -142,47 +142,7 @@ function formatAge(age: number): string {
         </div>
       </div>
 
-      <!-- 3. Заполненность профиля -->
-      <div
-        class="bg-white dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border rounded-2xl p-5 shadow-xs flex flex-col justify-between"
-      >
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">Резюме</span>
-            <span class="text-xs font-mono font-bold text-gray-700 dark:text-gray-300">
-              {{ completionPercentage }}%
-            </span>
-          </div>
-          <div>
-            <!-- Прогресс-бар -->
-            <div class="w-full bg-gray-100 dark:bg-fsp-dark rounded-full h-2 mb-2 overflow-hidden">
-              <div
-                :style="{ width: `${completionPercentage}%` }"
-                class="bg-fsp-blue h-full rounded-full transition-all duration-500"
-              ></div>
-            </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-sans">
-              {{
-                completionPercentage >= 80
-                  ? 'Отлично заполнено для точного матчинга'
-                  : 'Заполните образование и языки'
-              }}
-            </p>
-          </div>
-        </div>
-        <div class="pt-4 mt-4 border-t border-gray-100 dark:border-fsp-dark-border">
-          <button
-            class="text-xs font-mono text-fsp-blue hover:underline cursor-pointer flex items-center justify-between w-full"
-            type="button"
-            @click="router.push('/candidate/profile/edit')"
-          >
-            <span>Дополнить разделы</span>
-            <i class="pi pi-arrow-right text-[10px]"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- 4. Микро-задачи и активность -->
+      <!-- 3. Микро-задачи и активность -->
       <div
         class="bg-white dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border rounded-2xl p-5 shadow-xs flex flex-col justify-between"
       >
@@ -215,90 +175,42 @@ function formatAge(age: number): string {
       </div>
     </div>
 
-    <!-- Блок быстрого перехода к ключевым функциям -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Блок ФСП Достижений -->
-      <div
-        class="bg-white dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border rounded-2xl p-6 shadow-xs space-y-4"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <div
-              class="w-8 h-8 rounded-lg bg-fsp-red/10 text-fsp-red flex items-center justify-center"
-            >
-              <i class="pi pi-trophy text-sm"></i>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-gray-900 dark:text-white">Верификация ФСП</h3>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                Спортивные достижения Федерации
-              </p>
-            </div>
-          </div>
-
-          <BaseButton size="sm" variant="outline" @click="router.push('/candidate/fsp')">
-            Управление
-          </BaseButton>
-        </div>
-
-        <div v-if="profile.fspAchievements.length > 0" class="space-y-2">
+    <!-- Блок ФСП Достижений -->
+    <div
+      class="bg-white dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border rounded-2xl p-6 shadow-xs space-y-4"
+    >
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
           <div
-            v-for="ach in profile.fspAchievements.slice(0, 2)"
-            :key="ach.id"
-            class="p-3 rounded-xl bg-gray-50 dark:bg-fsp-dark border border-gray-200/60 dark:border-fsp-dark-border flex items-center justify-between text-xs"
+            class="w-8 h-8 rounded-lg bg-fsp-red/10 text-fsp-red flex items-center justify-center"
           >
-            <div class="font-medium text-gray-800 dark:text-gray-200 truncate mr-2">
-              {{ ach.title }}
-            </div>
-            <span class="text-fsp-red font-mono font-bold shrink-0">{{ ach.rank }}</span>
+            <i class="pi pi-trophy text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-900 dark:text-white">Верификация ФСП</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Спортивные достижения Федерации</p>
           </div>
         </div>
+
+        <BaseButton size="sm" variant="outline" @click="router.push('/candidate/fsp')">
+          Управление
+        </BaseButton>
       </div>
 
-      <!-- Блок скачивания стандартизированного PDF-резюме HuntMe -->
-      <div
-        class="bg-white dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border rounded-2xl p-6 shadow-xs space-y-4 flex flex-col justify-between"
-      >
-        <div class="space-y-2">
-          <div class="flex items-center gap-2.5">
-            <div
-              class="w-8 h-8 rounded-lg bg-fsp-blue/10 text-fsp-blue flex items-center justify-center"
-            >
-              <i class="pi pi-file-pdf text-sm"></i>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-gray-900 dark:text-white">
-                Цифровой паспорт HuntMe
-              </h3>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                Стандартизированный профиль с QR-кодом верификации
-              </p>
-            </div>
+      <div v-if="profile.fspAchievements.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div
+          v-for="ach in profile.fspAchievements.slice(0, 4)"
+          :key="ach.id"
+          class="p-3.5 rounded-xl bg-gray-50 dark:bg-fsp-dark border border-gray-200/60 dark:border-fsp-dark-border flex items-center justify-between text-xs"
+        >
+          <div class="font-medium text-gray-800 dark:text-gray-200 truncate mr-2">
+            {{ ach.title }}
           </div>
-          <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed pt-1 font-sans">
-            Сгенерируйте и скачайте официальный PDF-паспорт с подтвержденным грейдом и спортивным
-            разрядом ФСП.
-          </p>
+          <span class="text-fsp-red font-mono font-bold shrink-0">{{ ach.rank }}</span>
         </div>
-
-        <div class="flex items-center gap-3 pt-2">
-          <BaseButton
-            icon="pi pi-download"
-            size="sm"
-            variant="primary"
-            @click="router.push('/candidate/profile/pdf')"
-          >
-            Скачать PDF
-          </BaseButton>
-          <BaseButton
-            icon="pi pi-eye"
-            size="sm"
-            variant="ghost"
-            @click="router.push('/candidate/profile/preview')"
-          >
-            Анонимный вид
-          </BaseButton>
-        </div>
+      </div>
+      <div v-else class="text-xs text-gray-400 font-mono py-2">
+        Достижения не привязаны. Привяжите ваш ФСП ID для верификации.
       </div>
     </div>
   </div>

@@ -40,9 +40,9 @@ const sizeClasses = computed(() => {
 <template>
   <span
     :class="[variantClasses, sizeClasses]"
-    class="inline-flex items-center gap-1.5 rounded-full border font-mono tracking-wide transition-all"
+    class="inline-flex items-center gap-1.5 rounded-full border font-mono tracking-wide transition-all whitespace-nowrap shrink-0"
   >
     <i v-if="icon" :class="icon" class="text-xs"></i>
-    <span>{{ label }}</span>
+    <span class="whitespace-nowrap">{{ label }}</span>
   </span>
 </template>

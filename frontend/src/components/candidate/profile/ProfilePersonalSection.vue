@@ -164,7 +164,7 @@ function handleSaveContact() {
         <h3 class="text-lg font-bold text-gray-900 dark:text-white">Личные и контактные данные</h3>
         <p class="text-xs text-gray-500 dark:text-gray-400">
           Прямые контакты защищены и раскрываются работодателям только при подтверждении взаимного
-          интереса (152-ФЗ)
+          интереса
         </p>
       </div>
       <div

@@ -31,13 +31,16 @@ function handleLink() {
       class="bg-white dark:bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
     >
       <div class="space-y-2">
-        <div class="flex items-center gap-2">
-          <img alt="ФСП" class="h-6 w-auto" src="/brand/logo_01.svg" />
-          <span class="text-xs font-mono font-bold text-fsp-red uppercase tracking-wider">
-            Федерация спортивного программирования России
-          </span>
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div class="flex items-center gap-2">
+            <img alt="ФСП" class="h-6 w-auto" src="/brand/logo_01.svg" />
+            <span class="text-xs font-mono font-bold text-fsp-red uppercase tracking-wider">
+              Федерация спортивного программирования России
+            </span>
+          </div>
           <BaseBadge
             v-if="isVerifiedFsp"
+            class="whitespace-nowrap shrink-0"
             icon="pi pi-check"
             label="ID Привязан"
             size="sm"

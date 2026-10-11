@@ -30,7 +30,7 @@ const cards: ForefrontItem[] = [
     badge: '1 место • Чемпионат ФСП 2025',
     quote:
       '«Верификация ФСП избавила от бесконечных лайвкодингов: работодатели сразу видят подтвержденный уровень и предлагают релевантные задачи с сильной вилкой ЗП.»',
-    image: '/brand/face1.png',
+    image: '/images/people/dmitry-sokolov.jpg',
   },
   {
     id: '2',
@@ -39,16 +39,16 @@ const cards: ForefrontItem[] = [
     badge: 'Победитель Хакатона ЛЦТ',
     quote:
       '«HuntMe полностью перевернул механику поиска: вместо сотен холодных откликов в пустоту я получила три целевых оффера за первую неделю.»',
-    image: '/brand/photo.jpeg',
+    image: '/images/people/elena-vasilieva.jpg',
   },
   {
     id: '3',
     name: 'Константин Морозов',
     roleTitle: 'Staff Backend Developer (Go / Rust)',
-    badge: 'Мастер спорта по спортпрограммированию',
+    badge: 'МС по спортпрограммированию',
     quote:
       '«Платформа оценивает не красивые формулировки в резюме, а реальные алгоритмические способности и умение писать надежный промышленный код.»',
-    image: '/brand/example.png',
+    image: '/images/people/konstantin-morozov.jpg',
   },
 ]
 </script>
@@ -71,19 +71,27 @@ const cards: ForefrontItem[] = [
         <div
           v-for="card in cards"
           :key="card.id"
-          class="group relative rounded-2xl overflow-hidden bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border p-6 flex flex-col justify-between shadow-lg hover:shadow-2xl hover:border-fsp-blue/50 transition-all duration-300 min-h-[380px]"
+          class="group relative rounded-2xl overflow-hidden bg-fsp-dark-surface border border-gray-200 dark:border-fsp-dark-border p-6 flex flex-col justify-between shadow-lg hover:shadow-2xl hover:border-fsp-blue/50 transition-all duration-300 min-h-[480px]"
         >
-          <!-- Фоновый градиент карточки -->
+          <!-- Стоковое фото разработчика на фоне карточки -->
+          <img
+            :alt="card.name"
+            :src="card.image"
+            class="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 z-0"
+            loading="lazy"
+          />
+
+          <!-- Затемнение только в нижней части, где расположен текст -->
           <div
-            class="absolute inset-0 bg-gradient-to-t from-fsp-dark via-fsp-dark-surface/90 to-transparent z-10 pointer-events-none"
+            class="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-fsp-dark via-fsp-dark/95 via-50% to-transparent z-10 pointer-events-none"
           ></div>
 
-          <!-- Бейдж достижения -->
+          <!-- Бейдж достижения: непрозрачная красная заливка и белый контент -->
           <div class="relative z-20 mb-4">
             <span
-              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-fsp-red/20 text-fsp-red border border-fsp-red/40 text-xs font-mono font-semibold"
+              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-fsp-red text-white text-xs font-mono font-bold shadow-md tracking-wide"
             >
-              <i class="pi pi-trophy text-[10px]"></i>
+              <i class="pi pi-trophy text-[11px] text-white"></i>
               {{ card.badge }}
             </span>
           </div>
